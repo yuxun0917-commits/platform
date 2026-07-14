@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourcePerFileMappings">
+    <file url="file://$PROJECT_DIR$/platform-service/src/main/resources/mapper/SysRoleMapper.xml" value="7fa02cd6-e3d9-43da-8625-f470745688c2" />
+  </component>
+</project>

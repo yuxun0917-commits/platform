@@ -1,0 +1,30 @@
+package com.platform.admin.vo.dict;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+
+import java.io.Serial;
+import java.io.Serializable;
+
+/**
+ * 字典类型选择列表 VO
+ *
+ * <p>用于下拉选择等性能敏感场景，仅返回必要的2个字段：id、字典名称。</p>
+ *
+ * @author platform
+ */
+@Data
+@Schema(description = "字典类型选择列表")
+public class DictSelectVO implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
+
+    /** 字典ID */
+    @Schema(description = "字典ID")
+    private Long id;
+
+    /** 字典名称 */
+    @Schema(description = "字典名称")
+    private String dictName;
+}

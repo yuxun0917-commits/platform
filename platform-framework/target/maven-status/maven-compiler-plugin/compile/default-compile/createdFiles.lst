@@ -1,0 +1,16 @@
+com\platform\framework\config\MyBatisPlusConfig.class
+com\platform\framework\interceptor\SaTokenContextInterceptor.class
+com\platform\framework\config\JacksonConfig.class
+com\platform\framework\filter\MyServletRequestWrapper.class
+com\platform\framework\config\SpringDocConfig.class
+com\platform\framework\security\StpInterfaceImpl.class
+com\platform\framework\config\OpenApiOperationCustomizer$PlatformOperationCustomizer.class
+com\platform\framework\filter\RequestReplaceFilter.class
+com\platform\framework\manager\AsyncManager.class
+com\platform\framework\handler\GlobalExceptionHandler.class
+com\platform\framework\config\RabbitMQConfig.class
+com\platform\framework\handler\MyHandlerMethodArgumentResolver.class
+com\platform\framework\filter\MyServletRequestWrapper$RequestBodyCachingInputStream.class
+com\platform\framework\config\SaTokenConfig.class
+com\platform\framework\config\WebMvcConfig.class
+com\platform\framework\config\OpenApiOperationCustomizer.class

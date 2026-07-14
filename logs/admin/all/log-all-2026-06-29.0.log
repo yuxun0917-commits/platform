@@ -1,0 +1,68 @@
+2026-06-29 14:38:04.699 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-06-29 14:38:04.738 [main] INFO  com.platform.PlatformApplication - Starting PlatformApplication using Java 17.0.19 with PID 19892 (C:\Users\29141\Desktop\project\project-admin\target\classes started by 29141 in C:\Users\29141\Desktop\project)
+2026-06-29 14:38:04.739 [main] DEBUG com.platform.PlatformApplication - Running with Spring Boot v3.2.5, Spring v6.1.6
+2026-06-29 14:38:04.739 [main] INFO  com.platform.PlatformApplication - The following 1 profile is active: "dev"
+2026-06-29 14:38:05.457 [main] INFO  o.s.d.r.config.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2026-06-29 14:38:05.460 [main] INFO  o.s.d.r.config.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2026-06-29 14:38:05.489 [main] INFO  o.s.d.r.config.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 18 ms. Found 0 Redis repository interfaces.
+2026-06-29 14:38:05.657 [main] INFO  o.springframework.cloud.context.scope.GenericScope - BeanFactory id=1ae0ceec-896c-35d0-9859-61774853c41a
+2026-06-29 14:38:06.162 [main] INFO  o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-06-29 14:38:06.171 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-06-29 14:38:06.172 [main] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-06-29 14:38:06.173 [main] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.20]
+2026-06-29 14:38:06.223 [main] INFO  o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-06-29 14:38:06.223 [main] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1450 ms
+2026-06-29 14:38:06.276 [main] DEBUG c.platform.framework.filter.RequestReplaceFilter - Filter 'requestReplaceFilter' configured for use
+2026-06-29 14:38:06.313 [main] INFO  c.a.d.s.b.a.DruidDataSourceAutoConfigure - Init DruidDataSource
+2026-06-29 14:38:07.318 [main] INFO  com.alibaba.druid.pool.DruidDataSource - {dataSource-1} inited
+2026-06-29 14:38:07.571 [main] INFO  c.p.s.security.PasswordEncoderAutoConfiguration - [Security] BCryptPasswordEncoder 初始化成功 | 使用方式: @Autowired PasswordEncoder
+2026-06-29 14:38:07.862 [main] INFO  com.platform.starter.redis.RedisAutoConfiguration - [Redis] RedisTemplate 初始化成功 | key: StringSerializer | value: GenericJackson2JsonRedisSerializer(纯JSON)
+2026-06-29 14:38:07.877 [main] INFO  com.platform.starter.redis.RedisAutoConfiguration - [Redis] RedisUtil 初始化成功 | prefix: platform: | ttl: 10 MINUTES
+2026-06-29 14:38:09.822 [main] INFO  org.springframework.cloud.commons.util.InetUtils - Cannot determine local hostname
+2026-06-29 14:38:09.909 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-06-29 14:38:09.924 [main] INFO  o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path ''
+2026-06-29 14:38:11.007 [main] INFO  org.springframework.cloud.commons.util.InetUtils - Cannot determine local hostname
+2026-06-29 14:38:11.009 [main] INFO  o.s.a.rabbit.connection.CachingConnectionFactory - Attempting to connect to: [192.168.244.128:5672]
+2026-06-29 14:38:12.959 [main] INFO  o.s.a.rabbit.connection.CachingConnectionFactory - Created new connection: rabbitConnectionFactory#632dc41:0/SimpleConnection@41935a9d [delegate=amqp://admin@192.168.244.128:5672/, localPort=55799]
+2026-06-29 14:38:12.963 [main] INFO  org.springframework.amqp.rabbit.core.RabbitAdmin - Auto-declaring a non-durable or auto-delete Exchange (sysUser.exchange) durable:true, auto-delete:true. It will be deleted by the broker if it shuts down, and can be redeclared by closing and reopening the connection.
+2026-06-29 14:38:15.120 [main] INFO  com.platform.PlatformApplication - Started PlatformApplication in 11.999 seconds (process running for 12.613)
+2026-06-29 14:38:27.584 [org.springframework.amqp.rabbit.RabbitListenerEndpointContainer#0-2] INFO  o.s.a.r.listener.SimpleMessageListenerContainer - Waiting for workers to finish.
+2026-06-29 14:38:28.186 [org.springframework.amqp.rabbit.RabbitListenerEndpointContainer#0-2] INFO  o.s.a.r.listener.SimpleMessageListenerContainer - Successfully waited for workers to finish.
+2026-06-29 14:38:28.187 [SpringApplicationShutdownHook] INFO  o.s.boot.web.embedded.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-06-29 14:38:28.197 [tomcat-shutdown] INFO  o.s.boot.web.embedded.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-06-29 14:38:28.218 [SpringApplicationShutdownHook] INFO  com.alibaba.druid.pool.DruidDataSource - {dataSource-1} closing ...
+2026-06-29 14:38:28.219 [SpringApplicationShutdownHook] INFO  com.alibaba.druid.pool.DruidDataSource - {dataSource-1} closed
+2026-06-29 15:47:34.500 [background-preinit] INFO  org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-06-29 15:47:34.529 [main] INFO  com.platform.PlatformApplication - Starting PlatformApplication using Java 17.0.19 with PID 9648 (C:\Users\29141\Desktop\project\project-admin\target\classes started by 29141 in C:\Users\29141\Desktop\project)
+2026-06-29 15:47:34.529 [main] DEBUG com.platform.PlatformApplication - Running with Spring Boot v3.2.5, Spring v6.1.6
+2026-06-29 15:47:34.529 [main] INFO  com.platform.PlatformApplication - The following 1 profile is active: "dev"
+2026-06-29 15:47:35.094 [main] INFO  o.s.d.r.config.RepositoryConfigurationDelegate - Multiple Spring Data modules found, entering strict repository configuration mode
+2026-06-29 15:47:35.095 [main] INFO  o.s.d.r.config.RepositoryConfigurationDelegate - Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2026-06-29 15:47:35.124 [main] INFO  o.s.d.r.config.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 17 ms. Found 0 Redis repository interfaces.
+2026-06-29 15:47:35.260 [main] INFO  o.springframework.cloud.context.scope.GenericScope - BeanFactory id=1ae0ceec-896c-35d0-9859-61774853c41a
+2026-06-29 15:47:35.647 [main] INFO  o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-06-29 15:47:35.654 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-06-29 15:47:35.655 [main] INFO  org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-06-29 15:47:35.655 [main] INFO  org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.20]
+2026-06-29 15:47:35.698 [main] INFO  o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-06-29 15:47:35.699 [main] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1142 ms
+2026-06-29 15:47:35.746 [main] DEBUG c.platform.framework.filter.RequestReplaceFilter - Filter 'requestReplaceFilter' configured for use
+2026-06-29 15:47:35.783 [main] INFO  c.a.d.s.b.a.DruidDataSourceAutoConfigure - Init DruidDataSource
+2026-06-29 15:47:36.122 [main] INFO  com.alibaba.druid.pool.DruidDataSource - {dataSource-1} inited
+2026-06-29 15:47:36.322 [main] INFO  c.p.s.security.PasswordEncoderAutoConfiguration - [Security] BCryptPasswordEncoder 初始化成功 | 使用方式: @Autowired PasswordEncoder
+2026-06-29 15:47:36.538 [main] INFO  com.platform.starter.redis.RedisAutoConfiguration - [Redis] RedisTemplate 初始化成功 | key: StringSerializer | value: GenericJackson2JsonRedisSerializer(纯JSON)
+2026-06-29 15:47:36.548 [main] INFO  com.platform.starter.redis.RedisAutoConfiguration - [Redis] RedisUtil 初始化成功 | prefix: platform: | ttl: 10 MINUTES
+2026-06-29 15:47:38.354 [main] INFO  org.springframework.cloud.commons.util.InetUtils - Cannot determine local hostname
+2026-06-29 15:47:38.428 [main] INFO  org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-06-29 15:47:38.440 [main] INFO  o.s.boot.web.embedded.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path ''
+2026-06-29 15:47:39.522 [main] INFO  org.springframework.cloud.commons.util.InetUtils - Cannot determine local hostname
+2026-06-29 15:47:39.524 [main] INFO  o.s.a.rabbit.connection.CachingConnectionFactory - Attempting to connect to: [192.168.244.128:5672]
+2026-06-29 15:47:39.606 [main] INFO  o.s.a.rabbit.connection.CachingConnectionFactory - Created new connection: rabbitConnectionFactory#47f39279:0/SimpleConnection@2eb73a42 [delegate=amqp://admin@192.168.244.128:5672/, localPort=53302]
+2026-06-29 15:47:39.612 [main] INFO  org.springframework.amqp.rabbit.core.RabbitAdmin - Auto-declaring a non-durable or auto-delete Exchange (sysUser.exchange) durable:true, auto-delete:true. It will be deleted by the broker if it shuts down, and can be redeclared by closing and reopening the connection.
+2026-06-29 15:47:39.808 [main] INFO  com.platform.PlatformApplication - Started PlatformApplication in 6.792 seconds (process running for 7.193)
+2026-06-29 15:48:03.152 [org.springframework.amqp.rabbit.RabbitListenerEndpointContainer#0-2] INFO  o.s.a.r.listener.SimpleMessageListenerContainer - Waiting for workers to finish.
+2026-06-29 15:48:04.004 [org.springframework.amqp.rabbit.RabbitListenerEndpointContainer#0-2] INFO  o.s.a.r.listener.SimpleMessageListenerContainer - Successfully waited for workers to finish.
+2026-06-29 15:48:04.013 [SpringApplicationShutdownHook] INFO  o.s.boot.web.embedded.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-06-29 15:48:04.022 [tomcat-shutdown] INFO  o.s.boot.web.embedded.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-06-29 15:48:04.042 [SpringApplicationShutdownHook] INFO  com.alibaba.druid.pool.DruidDataSource - {dataSource-1} closing ...
+2026-06-29 15:48:04.046 [SpringApplicationShutdownHook] INFO  com.alibaba.druid.pool.DruidDataSource - {dataSource-1} closed
