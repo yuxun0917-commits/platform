@@ -10,8 +10,6 @@ target/
 .vscode/
 
 # 本地工具缓存
-.trae/
-.workbuddy/
 .uploads/
 
 # 日志文件
