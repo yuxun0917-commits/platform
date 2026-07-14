@@ -15,14 +15,3 @@
 # 日志文件
 logs/
 *.log
-
-# Maven 本地仓库 (如果你不小心把本地仓库建在这里，强烈建议忽略)
-repository/
-
-# 操作系统文件
-.DS_Store
-Thumbs.db
-
-# 应用配置文件 (如果包含数据库密码等，建议忽略)
-# application-*.yml
-# application-*.properties
