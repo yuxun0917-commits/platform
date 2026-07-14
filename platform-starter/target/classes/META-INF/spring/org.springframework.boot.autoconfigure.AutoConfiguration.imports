@@ -1,6 +1,0 @@
-com.platform.starter.file.FileUploadAutoConfiguration
-com.platform.starter.threadpool.ThreadPoolAutoConfiguration
-com.platform.starter.ratelimiter.RateLimiterAutoConfiguration
-com.platform.starter.redis.RedisAutoConfiguration
-com.platform.starter.security.PasswordEncoderAutoConfiguration
-com.platform.starter.mapperfacade.MapperFacadeAutoConfiguration
