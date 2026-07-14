@@ -1,5 +1,5 @@
 # 编译输出
-target/
+**/target/
 *.class
 
 # IDE 配置 (必须忽略)
