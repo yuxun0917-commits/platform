@@ -11,6 +11,8 @@
 
 # 本地工具缓存
 .uploads/
+uploads/
+chunks/
 
 # 日志文件
 logs/

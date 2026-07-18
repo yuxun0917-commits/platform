@@ -6,8 +6,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import oshi.SystemInfo;
 import oshi.hardware.CentralProcessor;
+import oshi.hardware.ComputerSystem;
 import oshi.hardware.GlobalMemory;
 import oshi.software.os.FileSystem;
+import oshi.software.os.OperatingSystem;
 import oshi.software.os.OSFileStore;
 import oshi.util.Util;
 import com.platform.common.constant.RabbitMqConstant;
@@ -71,7 +73,7 @@ public class ServerComponent {
         bo.setCpu(setCpuInfo(si));
         bo.setMem(setMemInfo(memory));
         bo.setJvm(setJvmInfo());
-        bo.setSys(setSysInfo());
+        bo.setSys(setSysInfo(si));
         bo.setSysFiles(setSysFiles(fileSystem));
         bo.setRedis(setRedisInfo());
         bo.setMq(setMqInfo());
@@ -88,13 +90,23 @@ public class ServerComponent {
         CentralProcessor processor = si.getHardware().getProcessor();
         ServerBO.Cpu cpu = new ServerBO.Cpu();
         cpu.setCpuNum(processor.getLogicalProcessorCount());
-        // 系统 CPU：两次 tick 采样计算
+        cpu.setPhysicalNum(processor.getPhysicalProcessorCount());
+        cpu.setPackageNum(processor.getPhysicalPackageCount());
+        cpu.setCpuName(processor.getProcessorIdentifier().getName());
+        // 系统 CPU：两次 tick 采样计算（同时采每核心负载，复用同一窗口）
         long[] prevTicks = processor.getSystemCpuLoadTicks();
+        long[][] prevPerCoreTicks = processor.getProcessorCpuLoadTicks();
         Util.sleep(CPU_SAMPLE_INTERVAL);
         double systemCpuLoad = processor.getSystemCpuLoadBetweenTicks(prevTicks);
+        double[] perCoreLoad = processor.getProcessorCpuLoadBetweenTicks(prevPerCoreTicks);
         cpu.setSys(round(systemCpuLoad * 100));
         cpu.setUsed(round(systemCpuLoad * 100));
         cpu.setFree(round((1.0 - systemCpuLoad) * 100));
+        List<Double> perCore = new ArrayList<>();
+        for (double load : perCoreLoad) {
+            perCore.add(round(load * 100));
+        }
+        cpu.setPerCore(perCore);
         return cpu;
     }
 
@@ -139,8 +151,9 @@ public class ServerComponent {
     /**
      * 采集服务器（操作系统）信息
      */
-    private ServerBO.Sys setSysInfo() {
+    private ServerBO.Sys setSysInfo(SystemInfo si) {
         ServerBO.Sys sys = new ServerBO.Sys();
+        OperatingSystem os = si.getOperatingSystem();
         try {
             InetAddress addr = InetAddress.getLocalHost();
             sys.setComputerName(addr.getHostName());
@@ -152,6 +165,21 @@ public class ServerComponent {
         sys.setOsName(System.getProperty("os.name"));
         sys.setOsArch(System.getProperty("os.arch"));
         sys.setOsVersion(System.getProperty("os.version"));
+        // 系统运行时长 / 启动时间
+        long sysUptimeSec = os.getSystemUptime();
+        sys.setSystemUptime(getRunTime(System.currentTimeMillis() - sysUptimeSec * 1000));
+        sys.setBootTime(os.getSystemBootTime() * 1000);
+        // 硬件型号（厂商 + 型号）
+        try {
+            ComputerSystem cs = si.getHardware().getComputerSystem();
+            String vendor = Objects.toString(cs.getManufacturer(), "").trim();
+            String model = Objects.toString(cs.getModel(), "").trim();
+            sys.setComputerModel((vendor + " " + model).trim());
+        } catch (Exception e) {
+            log.debug("[ServerMonitor] 获取硬件型号失败", e);
+        }
+        // 系统进程总数
+        sys.setProcessCount(os.getProcessCount());
         return sys;
     }
 

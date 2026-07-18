@@ -1,5 +1,6 @@
 package com.platform.admin.controller.attachment;
 
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import com.platform.admin.vo.attachment.AttachmentVO;
 import com.platform.common.annotation.JsonCoverParam;
@@ -17,6 +18,7 @@ import com.platform.starter.file.FileStorageManager;
 import com.platform.starter.file.FileUploadResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import ma.glasnost.orika.MapperFacade;
@@ -28,9 +30,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 附件管理控制器
@@ -109,7 +116,16 @@ public class SysAttachmentController {
         paramsMap.put("bizType", StrUtil.trim(bizType));
         paramsMap.put("keyword", StrUtil.trim(keyword));
         attachmentService.paging(paging, paramsMap);
-        paging.convert(att -> mapperFacade.map(att, AttachmentVO.class));
+        // 取本页所有 configId 的 set，批量查部分字段（id + configName），避免逐条查/N+1
+        Set<Long> configIds = paging.getRecords().stream()
+                .map(SysAttachment::getConfigId)
+                .collect(Collectors.toSet());
+        Map<Long, String> configNameMap = storageConfigService.mapConfigNameByIds(configIds);
+        paging.convert(att -> {
+            AttachmentVO vo = mapperFacade.map(att, AttachmentVO.class);
+            vo.setConfigName(configNameMap.get(att.getConfigId()));
+            return vo;
+        });
         return Result.success(paging);
     }
 
@@ -122,6 +138,63 @@ public class SysAttachmentController {
         SysAttachment att = attachmentService.findById(id);
         AttachmentVO vo = mapperFacade.map(att, AttachmentVO.class);
         return Result.success(vo);
+    }
+
+    /**
+     * 附件下载（强制下载：Content-Disposition: attachment）
+     */
+    @Operation(summary = "附件下载")
+    @GetMapping("/download")
+    public void download(@NotNull(message = "附件ID不能为空") Long id, HttpServletResponse response) {
+        doServe(id, response, true);
+    }
+
+    /**
+     * 附件预览（浏览器内联：Content-Disposition: inline，图片/PDF 等可直接预览）
+     */
+    @Operation(summary = "附件预览")
+    @GetMapping("/preview")
+    public void preview(@NotNull(message = "附件ID不能为空") Long id, HttpServletResponse response) {
+        doServe(id, response, false);
+    }
+
+    /**
+     * 统一输出附件流：设置响应头后，由存储后端把文件内容写入响应输出流
+     */
+    private void doServe(Long id, HttpServletResponse response, boolean forceDownload) {
+        SysAttachment att = attachmentService.findById(id);
+        SysStorageConfig config = storageConfigService.findById(att.getConfigId());
+        FileStorage storage = fileStorageManager.getStorage(config);
+        response.setCharacterEncoding("UTF-8");
+        response.setContentType(StrUtil.emptyToDefault(att.getContentType(), "application/octet-stream"));
+        String ext = StrUtil.emptyToDefault(att.getFileExt(), "");
+        // 下载文件名用无横线的随机 UUID（simpleUUID），保持与存储 key 解耦
+        String fileName = IdUtil.simpleUUID() + (StrUtil.isBlank(ext) ? "" : "." + ext);
+        String encoded = encodeFileName(fileName);
+        String disposition = (forceDownload ? "attachment" : "inline")
+                + "; filename=\"" + encoded + "\"; filename*=UTF-8''" + encoded;
+        response.setHeader("Content-Disposition", disposition);
+        response.setHeader("Filename", fileName);
+        if (att.getFileSize() != null && att.getFileSize() > 0) {
+            response.setContentLengthLong(att.getFileSize());
+        }
+        try (OutputStream out = response.getOutputStream()) {
+            storage.download(att.getFileKey(), out);
+            out.flush();
+        } catch (IOException e) {
+            throw new BusinessException(ErrorCode.FILE_UPLOAD_FAIL, "文件输出失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 文件名按 RFC 5987 编码（兼容中文/空格，空格转 %20）
+     */
+    private String encodeFileName(String name) {
+        try {
+            return URLEncoder.encode(name, "UTF-8").replace("+", "%20");
+        } catch (Exception e) {
+            return "download";
+        }
     }
 
     /**

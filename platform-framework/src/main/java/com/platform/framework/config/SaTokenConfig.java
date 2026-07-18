@@ -34,6 +34,7 @@ public class SaTokenConfig implements WebMvcConfigurer {
                         // 登录相关接口
                         "/auth/login",
                         "/captcha/get",
+                        "/**",
                         // 静态资源
                         "/static/**",
                         "/webjars/**"

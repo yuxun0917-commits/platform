@@ -4,6 +4,7 @@ import com.platform.common.entity.admin.SysStorageConfig;
 import com.platform.common.result.Paging;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -53,4 +54,12 @@ public interface SysStorageConfigService extends IService<SysStorageConfig> {
      * @param keyword  模糊匹配配置名称
      */
     void selectList(Paging<SysStorageConfig> paging, String keyword);
+
+    /**
+     * 批量查询配置名称（部分字段：id + config_name），用于附件列表关联展示，避免逐条查 + N+1
+     *
+     * @param ids 配置ID集合
+     * @return 配置ID -> 配置名称 映射
+     */
+    Map<Long, String> mapConfigNameByIds(Collection<Long> ids);
 }

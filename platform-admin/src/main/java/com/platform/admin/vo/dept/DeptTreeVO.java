@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -56,6 +57,9 @@ public class DeptTreeVO implements Serializable {
     /** 状态描述（用于前端展示） */
     @Schema(description = "状态描述")
     private String statusText;
+
+    @Schema(description = "创建时间")
+    private LocalDateTime createTime;
 
     /** 子部门列表 */
     @Schema(description = "子部门列表")

@@ -78,7 +78,7 @@ public class SysDeptController {
         // 1. 优先读缓存
         String cached = deptComponent.getDeptTree();
         if (Objects.nonNull(cached)) {
-            List<DeptTreeVO> tree = JacksonUtil.parseTypeRef(cached, new TypeReference<List<DeptTreeVO>>() {});
+            List<DeptTreeVO> tree = JacksonUtil.parseTypeRef(cached, new TypeReference<>() {});
             return Result.success(tree);
         }
         // 2. 缓存未命中：查询所有未删除部门（已按 displayOrder 升序、id 倒序排序）

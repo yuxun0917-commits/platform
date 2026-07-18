@@ -4,6 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
 import com.aliyun.oss.model.ObjectMetadata;
+import com.aliyun.oss.model.OSSObject;
 import com.aliyun.oss.model.PutObjectRequest;
 import com.platform.common.entity.admin.SysStorageConfig;
 import com.platform.common.enums.ErrorCode;
@@ -11,12 +12,14 @@ import com.platform.common.enums.StorageTypeEnum;
 import com.platform.common.exception.BusinessException;
 import com.platform.starter.file.FileStorage;
 import com.platform.starter.file.FileUploadResult;
+import cn.hutool.core.io.IoUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.UUID;
 
 /**
@@ -82,6 +85,26 @@ public class OssFileStorage implements FileStorage {
         OSS ossClient = buildClient();
         try {
             ossClient.deleteObject(config.getBucket(), fileKey);
+        } finally {
+            ossClient.shutdown();
+        }
+    }
+
+    @Override
+    public void download(String fileKey, OutputStream out) {
+        if (StrUtil.isBlank(fileKey)) {
+            throw new BusinessException(ErrorCode.FILE_UPLOAD_FAIL, "文件不存在");
+        }
+        OSS ossClient = buildClient();
+        try {
+            OSSObject ossObject = ossClient.getObject(config.getBucket(), fileKey);
+            try (InputStream in = ossObject.getObjectContent()) {
+                IoUtil.copy(in, out);
+                log.info("[OSS下载] 成功, bucket={}, key={}", config.getBucket(), fileKey);
+            }
+        } catch (Exception e) {
+            log.error("[OSS下载] 失败, bucket={}, key={}", config.getBucket(), fileKey, e);
+            throw new BusinessException(ErrorCode.FILE_UPLOAD_FAIL, "OSS文件读取失败：" + e.getMessage());
         } finally {
             ossClient.shutdown();
         }

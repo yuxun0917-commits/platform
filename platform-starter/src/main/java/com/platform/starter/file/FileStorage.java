@@ -5,6 +5,7 @@ import com.platform.common.enums.StorageTypeEnum;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.OutputStream;
 
 /**
  * 文件存储接口
@@ -55,4 +56,14 @@ public interface FileStorage {
      * @return 访问地址
      */
     String getAccessUrl(String fileKey);
+
+    /**
+     * 下载文件：将文件内容写入指定输出流（通常为 {@code HttpServletResponse.getOutputStream()}）
+     *
+     * <p>由各实现自行负责底层客户端 / 流资源的释放，调用方只需传入输出流。</p>
+     *
+     * @param fileKey 存储键（本地为相对路径，对象存储为 object key）
+     * @param out     输出流（响应输出流）
+     */
+    void download(String fileKey, OutputStream out);
 }

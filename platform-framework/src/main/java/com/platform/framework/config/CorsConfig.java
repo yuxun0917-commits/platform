@@ -23,7 +23,7 @@ import java.util.List;
 public class CorsConfig {
 
     private static final List<String> EXPOSED_HEADERS = List.of(
-            "Content-Type", "Authorization", "X-Requested-With", "X-Token", "Token"
+            "Content-Type", "Authorization", "X-Requested-With", "X-Token", "Token", "Filename"
     );
 
     @Bean

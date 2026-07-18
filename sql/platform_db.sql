@@ -714,7 +714,8 @@ CREATE TABLE `sys_storage_config`  (
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_storage_type`(`storage_type` ASC) USING BTREE,
-  INDEX `idx_status`(`status` ASC) USING BTREE
+  INDEX `idx_status`(`status` ASC) USING BTREE,
+  UNIQUE INDEX `uk_is_default`((CASE WHEN `is_default` = 1 THEN 1 END)) USING BTREE COMMENT '唯一约束：全表仅允许一条默认存储(is_default=1)'
 ) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '文件存储配置表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------

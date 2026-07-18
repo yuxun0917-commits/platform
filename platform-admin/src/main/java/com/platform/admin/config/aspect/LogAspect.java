@@ -9,7 +9,13 @@ import com.platform.common.utils.JacksonUtil;
 import com.platform.framework.manager.AsyncManager;
 import com.platform.service.service.SysLogService;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.security.Principal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -198,8 +204,8 @@ public class LogAspect {
         }
         StringBuilder sb = new StringBuilder();
         for (Object arg : args) {
-            if (arg instanceof MultipartFile || arg instanceof byte[]) {
-                sb.append("[binary],");
+            if (isSkippableArg(arg)) {
+                sb.append("[skip],");
             } else {
                 try {
                     sb.append(JacksonUtil.toJsonString(arg)).append(",");
@@ -209,6 +215,22 @@ public class LogAspect {
             }
         }
         return truncate(sb.toString(), 2000);
+    }
+
+    /**
+     * 不可序列化/不应入库的参数（避免 Jackson 反射调用 getter 副作用，
+     * 例如序列化 HttpServletResponse 会触发 getWriter() 占用响应流，导致流式下载接口崩溃）
+     */
+    private boolean isSkippableArg(Object arg) {
+        return Objects.isNull(arg)
+                || arg instanceof ServletRequest
+                || arg instanceof ServletResponse
+                || arg instanceof HttpSession
+                || arg instanceof Principal
+                || arg instanceof InputStream
+                || arg instanceof OutputStream
+                || arg instanceof MultipartFile
+                || arg instanceof byte[];
     }
 
     /**
@@ -242,11 +264,8 @@ public class LogAspect {
      * 对象序列化并脱敏
      */
     private String desensitize(Object obj) {
-        if (Objects.isNull(obj)) {
-            return "null";
-        }
-        if (obj instanceof MultipartFile || obj instanceof byte[]) {
-            return "[binary]";
+        if (isSkippableArg(obj)) {
+            return "[skip]";
         }
         try {
             String json = JacksonUtil.toJsonString(obj);

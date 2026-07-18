@@ -22,19 +22,15 @@ public class RequestReplaceFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        String contentType = request.getContentType();
+        // multipart 上传请求不能包装/提前读取 body，否则 MyServletRequestWrapper 会把流读光，
+        // 导致后续 StandardServletMultipartResolver 解析时 Stream closed。必须在包装之前就放行。
+        if (Objects.nonNull(contentType) && contentType.toLowerCase().startsWith(ContentType.MULTIPART.getValue())) {
+            filterChain.doFilter(request, response);
+            return;
+        }
         if (!(request instanceof MyServletRequestWrapper)) {
             request = new MyServletRequestWrapper(request);
-        }
-        //如果有文件上传的业务场景，需要用下面的代码进行处理，不然文件上传的流会有问题
-        String contentType = request.getContentType();
-        //如果contentType是空
-        //或者contentType是多媒体的上传类型则忽略，不进行包装，直接return
-        if (Objects.isNull(contentType)) {
-            filterChain.doFilter(request, response);
-            return;
-        } else if(Objects.equals(contentType, ContentType.MULTIPART.getValue())){
-            filterChain.doFilter(request, response);
-            return;
         }
         filterChain.doFilter(request, response);
     }

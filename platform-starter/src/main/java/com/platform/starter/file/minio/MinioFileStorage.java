@@ -7,9 +7,11 @@ import com.platform.common.enums.StorageTypeEnum;
 import com.platform.common.exception.BusinessException;
 import com.platform.starter.file.FileStorage;
 import com.platform.starter.file.FileUploadResult;
+import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.RemoveObjectArgs;
+import cn.hutool.core.io.IoUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,6 +19,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -92,6 +95,22 @@ public class MinioFileStorage implements FileStorage {
         } catch (Exception e) {
             log.error("[MinIO删除] 失败, bucket={}, key={}", config.getBucket(), fileKey, e);
             throw new BusinessException(ErrorCode.FILE_UPLOAD_FAIL, "MinIO删除失败：" + e.getMessage());
+        }
+    }
+
+    @Override
+    public void download(String fileKey, OutputStream out) {
+        if (StrUtil.isBlank(fileKey)) {
+            throw new BusinessException(ErrorCode.FILE_UPLOAD_FAIL, "文件不存在");
+        }
+        MinioClient client = buildClient();
+        try (InputStream in = client.getObject(GetObjectArgs.builder()
+                .bucket(config.getBucket()).object(fileKey).build())) {
+            IoUtil.copy(in, out);
+            log.info("[MinIO下载] 成功, bucket={}, key={}", config.getBucket(), fileKey);
+        } catch (Exception e) {
+            log.error("[MinIO下载] 失败, bucket={}, key={}", config.getBucket(), fileKey, e);
+            throw new BusinessException(ErrorCode.FILE_UPLOAD_FAIL, "MinIO文件读取失败：" + e.getMessage());
         }
     }
 

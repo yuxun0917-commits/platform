@@ -1,7 +1,6 @@
 package com.platform.starter.file;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
@@ -10,7 +9,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 /**
  * 文件上传自动配置类
  *
- * <p>基于 Spring Boot 自动装配机制，当 {@code file.upload.enabled=true}（默认开启）时自动生效。
+ * <p>基于 Spring Boot 自动装配机制自动生效。
  * 负责：</p>
  * <ul>
  *   <li>绑定 {@link FileUploadProperties} 配置属性（大小限制、允许类型、本地路径、URL前缀）；</li>
@@ -24,7 +23,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  */
 @AutoConfiguration
 @EnableConfigurationProperties(FileUploadProperties.class)
-@ConditionalOnProperty(prefix = "file.upload", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class FileUploadAutoConfiguration implements WebMvcConfigurer {
 
     private final FileUploadProperties properties;

@@ -46,17 +46,38 @@
             <artifactId>orika-spring-boot-starter</artifactId>
         </dependency>
         <!-- 多文件存储后端 SDK（本地/OSS/COS/MinIO） -->
+        <!-- 排除 commons-logging：aliyun-java-sdk-core 以 compile 作用域传递引入它，
+             与 Spring 自带的 spring-jcl 冲突并触发启动告警（"Standard Commons Logging discovery in action"）。
+             统一在此用 spring-jcl 作为 JCL 实现，故排除各云 SDK 带来的 commons-logging。 -->
         <dependency>
             <groupId>com.aliyun.oss</groupId>
             <artifactId>aliyun-sdk-oss</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.qcloud</groupId>
             <artifactId>cos_api</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.minio</groupId>
             <artifactId>minio</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
     </dependencies>
 

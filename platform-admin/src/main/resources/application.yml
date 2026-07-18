@@ -51,7 +51,6 @@ springdoc:
 # 文件上传配置（FileUploadAutoConfiguration）
 file:
   upload:
-    enabled: true
     max-size: 1024
     path: ./uploads
     allowed-types: jpg,jpeg,png,gif,bmp,pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,zip,rar

@@ -61,6 +61,18 @@ public class ServerBO implements Serializable {
 
         /** 空闲率（%） */
         private double free;
+
+        /** CPU 型号名称（如 12th Gen Intel Core i7-12700H） */
+        private String cpuName;
+
+        /** 物理核心数（不含超线程） */
+        private int physicalNum;
+
+        /** CPU 插槽 / 物理包数（几颗 CPU） */
+        private int packageNum;
+
+        /** 每核心使用率（%），按核心顺序，长度 = 逻辑核心数 */
+        private List<Double> perCore;
     }
 
     /**
@@ -184,6 +196,18 @@ public class ServerBO implements Serializable {
 
         /** 操作系统版本 */
         private String osVersion;
+
+        /** 系统已运行时长（格式化，如 3天5小时12分钟） */
+        private String systemUptime;
+
+        /** 系统启动时间（epoch 毫秒） */
+        private Long bootTime;
+
+        /** 硬件型号（厂商 + 型号，如 Dell Inc. XPS 15 9510） */
+        private String computerModel;
+
+        /** 系统进程总数 */
+        private int processCount;
     }
 
     /**

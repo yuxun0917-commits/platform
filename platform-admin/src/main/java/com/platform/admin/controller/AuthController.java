@@ -17,6 +17,7 @@ import com.platform.component.admin.user.UserComponent;
 import com.platform.component.captcha.CaptchaComponent;
 import com.platform.service.service.SysUserService;
 import com.platform.starter.redis.RedisUtil;
+import com.platform.starter.security.RsaComponent;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -41,6 +42,7 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final RedisUtil redisUtil;
     private final UserComponent userComponent;
+    private final RsaComponent rsaComponent;
 
     /**
      * 用户登录
@@ -58,13 +60,30 @@ public class AuthController {
         if (!Objects.equals(loginVO.getCaptchaCode(), byPassCaptcha)) {
             captchaComponent.verify(loginVO.getCaptchaKey(), loginVO.getCaptchaCode());
         }
-        // 2. Service 层校验用户名、密码、禁用状态
-        SysUser sysUser = sysUserService.login(loginVO.getUsername(), loginVO.getPassword());
-        // 3. Sa-Token 登录，生成令牌
+        // 2. 前端必须用 RSA 公钥加密，此处无条件解密
+        String username = rsaComponent.decryptByPrivateKey(loginVO.getUsername());
+        String password = rsaComponent.decryptByPrivateKey(loginVO.getPassword());
+        // 3. Service 层校验用户名、密码、禁用状态
+        SysUser sysUser = sysUserService.login(username, password);
+        // 4. Sa-Token 登录，生成令牌
         StpUtil.login(sysUser.getId());
         StpUtil.getSession().set("username", sysUser.getUsername());
         StpUtil.getSession().set("nickname", sysUser.getNickname());
         return Result.success(StpUtil.getTokenValue());
+    }
+
+    /**
+     * 获取 RSA 公钥（Base64）
+     *
+     * <p>前端登录 / 二次认证前调用此接口拿到公钥，用其对用户名、密码加密后再提交，
+     * 避免凭据以明文出现在网络中。公钥可公开获取，配对私钥仅驻留后端内存。</p>
+     *
+     * @return RSA 公钥（Base64 编码的 X.509 格式）
+     */
+    @Operation(summary = "获取 RSA 公钥")
+    @GetMapping("/rsa/public-key")
+    public Result rsaPublicKey() {
+        return Result.success(rsaComponent.getPublicKeyBase64());
     }
 
     /**
@@ -107,6 +126,8 @@ public class AuthController {
     @Operation(summary = "二次认证")
     @PostMapping("/second-factor/verify")
     public Result secondAuth(@Valid @RequestBody SecondAuthVO secondAuthVO) {
+        // 前端必须用 RSA 公钥加密，此处无条件解密
+        String password = rsaComponent.decryptByPrivateKey(secondAuthVO.getPassword());
         SysUser sysUser = sysUserService.findById(SecurityUser.getUserId());
         Assert.isTrue(
                 passwordEncoder.matches(secondAuthVO.getPassword(), sysUser.getPassword()),

@@ -14,8 +14,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -44,10 +46,10 @@ public class SysStorageConfigServiceImpl extends ServiceImpl<SysStorageConfigMap
         SysStorageConfig config = lambdaQuery()
                 .eq(SysStorageConfig::getIsDelete, DeleteStatusEnum.NORMAL.getCode())
                 .eq(SysStorageConfig::getIsDefault, 1)
-                .eq(SysStorageConfig::getStatus, StorageConfigStatusEnum.ENABLED.getCode())
                 .one();
-        if (Objects.isNull(config)) {
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "未配置可用的默认存储，请先在存储配置中启用并设为默认");
+        Assert.notNull(config, "未配置默认存储，请先在存储配置中设为默认");
+        if (StorageConfigStatusEnum.DISABLED.getCode().equals(config.getStatus())) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "默认上传配置已被停用");
         }
         return config;
     }
@@ -88,7 +90,21 @@ public class SysStorageConfigServiceImpl extends ServiceImpl<SysStorageConfigMap
                 .eq(SysStorageConfig::getIsDelete, DeleteStatusEnum.NORMAL.getCode())
                 .eq(SysStorageConfig::getStatus, StorageConfigStatusEnum.ENABLED.getCode())
                 .like(Objects.nonNull(keyword) && !keyword.isBlank(), SysStorageConfig::getConfigName, keyword)
-                .orderByDesc(SysStorageConfig::getId)
-                .page(paging);
+            .orderByDesc(SysStorageConfig::getId)
+            .page(paging);
+    }
+
+    @Override
+    public Map<Long, String> mapConfigNameByIds(Collection<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Map.of();
+        }
+        return lambdaQuery()
+                .select(SysStorageConfig::getId, SysStorageConfig::getConfigName)
+                .in(SysStorageConfig::getId, ids)
+                .eq(SysStorageConfig::getIsDelete, DeleteStatusEnum.NORMAL.getCode())
+                .list()
+                .stream()
+                .collect(Collectors.toMap(SysStorageConfig::getId, SysStorageConfig::getConfigName, (a, b) -> a));
     }
 }

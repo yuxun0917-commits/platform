@@ -6,7 +6,7 @@
 - 各模块职责：
   - common：实体（**实体集中在 common** `entity/` 与 `entity/admin/`）、`result/Result`+`Paging`、`exception/BusinessException`、`enums/ErrorCode`(5位码)、`context/UserContextHolder`(TTL)、常量、annotation(`IgnoreLog`/`JsonCoverParam`)、utils(`Assert`)。
   - service：19 套 Mapper/Service/ServiceImpl(继承 MP `BaseMapper`/`IService`)+XML；`mq/`(UserProducer/UserConsumer 手动ACK)。
-  - starter：自动装配"引入即生效"，imports 含 6 个 AutoConfiguration：file/threadpool/ratelimiter/redis/security(BCrypt)/mapperfacade(Orika)。`RedisUtil`、`RateLimit`+切面、文件存储抽象。
+  - starter：自动装配"引入即生效"，imports 含 7 个 AutoConfiguration：file/threadpool/ratelimiter/redis/security(BCrypt+RSA)/mapperfacade(Orika)。`RedisUtil`、`RateLimit`+切面、文件存储抽象、`RsaComponent`(RSA 2048 密钥对内存生成，私钥不落盘)。
   - framework：全局配置——`MyBatisPlusConfig`(分页+乐观锁)、`SaTokenConfig`、`JacksonConfig`、`RabbitMQConfig`、`SpringDocConfig`、`WebMvcConfig`(仅参数解析器)；**`CorsConfig`(过滤器级 CORS，`FilterRegistrationBean` 设 `Ordered.HIGHEST_PRECEDENCE`，保证预检 OPTIONS 先于 Sa-Token 拦截器拿到 CORS 头)**；`GlobalExceptionHandler`；`security/StpInterfaceImpl`；`interceptor/SaTokenContextInterceptor`；`manager/AsyncManager`；`filter/RequestReplaceFilter`。
   - component：业务组合组件——UserComponent 等(缓存聚合)、CaptchaComponent、PageExportComponent(EasyExcel)、ScheduleComponent(Quartz)、ServerComponent(OSHI监控)、TreeBuilderComponent、分片上传。
   - admin：启动类 `com.platform.PlatformApplication`(@MapperScan com.platform.service.mapper)、全部 Controller、VO、`LogAspect`(操作日志入库+脱敏)、`MySaTokenListener`(登录日志)、application*.yml。
@@ -21,3 +21,17 @@
 - 已生成 SQL：`sql/sys_attachment.sql`、`sql/sys_storage_config.sql`（含本地默认配置种子）。
 - 代码已落地（已编译通过）：`StorageTypeEnum` + `StorageConfigStatusEnum`；`FileStorage` 接口 + `FileUploadResult` + 4 个实现 + 对应 `FileStorageFactory` + `FileStorageManager`；`SysStorageConfig`/`SysAttachment` 实体+Mapper+Service+Controller；原 `FileService` 删除；`FileProcessComponent` 改为校验后走 `FileStorageManager`；SDK 依赖（aliyun-sdk-oss 3.16.1 / cos_api 5.6.137 / minio 8.5.2）加入 starter + 根 pom dependencyManagement。
 - 存储实现分包约定（platform-starter）：共享抽象 `FileStorage`/`FileUploadResult`/`FileStorageFactory`/`FileStorageManager` 留在 `com.platform.starter.file`；四个策略各自独立子包：`file.local`(LocalFileStorage+Factory)、`file.oss`(OssFileStorage+Factory)、`file.cos`(CosFileStorage+Factory)、`file.minio`(MinioFileStorage+Factory)。工厂 `@Component` beanName 保持不变（localFileStorageFactory 等），由 `StorageTypeEnum.getBeanName()` 路由。
+
+## 后端开发规范（权威来源 = `platform-scaffold-dev` 技能）
+- 该技能是代码生成的唯一权威约定，每次新增/修改后端代码前必须遵循。核心约束速记：
+  - API 只用 POST/GET；POST=写（add/edit/delete/editStatus/changePassword），GET=查（page/select-list/view/info/enums）。单参 POST 加 `@JsonCoverParam`；VO 参数用 `@Valid @RequestBody`；GET 问号传参不加 `@RequestParam`（id 等可用）。
+  - Controller 返回裸 `Result`（不带泛型）；分页直接 `Result.success(paging)`，`Paging extends MP Page`。
+  - 每个模块 Controller 必备标准接口：/page /select-list /view /enums /add /edit /delete（可选 /editStatus /sort /changePassword /assignRoles）。
+  - VO 隔离：XxxSaveVO/XxxEditVO/XxxVO 独立，**禁止 Entity 做接口入参**；VO 字段校验按表定义（String 加 `@Size(max=列长)`，必填 `@NotBlank`）。
+  - 事务只能放 Component 的 `doSomethingInTransactional`（禁止 Controller/Service 直接 `@Transactional`）；查询不进事务。
+  - 对象转换用 `MapperFacade`（Orika），**禁止 BeanUtils.copyProperties**。
+  - 业务校验在 Controller 层 `checkParams`，Service 只做 CRUD（findById 含存在性校验）。
+  - 状态枚举独立（每个实体一套，含 getByCode/getDescByCode/fromStatus）；空值判断用 `Objects.xxx`，禁止 `xx == null`。
+  - 列表查询必须 `orderByDesc`；逻辑删除手动 `.eq(is_delete, NORMAL)`（无 `@TableLogic`）。
+  - 后置清理（踢下线/清缓存）走 `AsyncManager` + XxxComponent 事件监听，异步执行。
+- 与技能模板的细节差异（实际代码现状）：无独立 `PageResult` 类；GET 详情参数用 `@RequestParam @NotNull Long id`（与"不加 @RequestParam"有细微出入，实际以现有写法为准）；MQ 生产端 `UserProducer` 被注释未启用；`RateLimiterAspect` 用调用栈取方法名（脆弱，建议改用 joinPoint）。

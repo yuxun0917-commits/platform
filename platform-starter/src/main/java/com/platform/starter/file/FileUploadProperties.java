@@ -23,9 +23,6 @@ public class FileUploadProperties implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    /** 是否启用文件上传自动配置（默认开启） */
-    private boolean enabled = true;
-
     /** 单文件最大大小（单位：MB，默认 10MB） */
     private long maxSize = 10L;
 

@@ -11,15 +11,18 @@ import com.qcloud.cos.COSClient;
 import com.qcloud.cos.ClientConfig;
 import com.qcloud.cos.auth.BasicCOSCredentials;
 import com.qcloud.cos.auth.COSCredentials;
+import com.qcloud.cos.model.COSObject;
 import com.qcloud.cos.model.ObjectMetadata;
 import com.qcloud.cos.model.PutObjectRequest;
 import com.qcloud.cos.region.Region;
+import cn.hutool.core.io.IoUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.UUID;
 
 /**
@@ -83,6 +86,26 @@ public class CosFileStorage implements FileStorage {
         COSClient cosClient = buildClient();
         try {
             cosClient.deleteObject(config.getBucket(), fileKey);
+        } finally {
+            cosClient.shutdown();
+        }
+    }
+
+    @Override
+    public void download(String fileKey, OutputStream out) {
+        if (StrUtil.isBlank(fileKey)) {
+            throw new BusinessException(ErrorCode.FILE_UPLOAD_FAIL, "文件不存在");
+        }
+        COSClient cosClient = buildClient();
+        try {
+            COSObject cosObject = cosClient.getObject(config.getBucket(), fileKey);
+            try (InputStream in = cosObject.getObjectContent()) {
+                IoUtil.copy(in, out);
+                log.info("[COS下载] 成功, bucket={}, key={}", config.getBucket(), fileKey);
+            }
+        } catch (Exception e) {
+            log.error("[COS下载] 失败, bucket={}, key={}", config.getBucket(), fileKey, e);
+            throw new BusinessException(ErrorCode.FILE_UPLOAD_FAIL, "COS文件读取失败：" + e.getMessage());
         } finally {
             cosClient.shutdown();
         }

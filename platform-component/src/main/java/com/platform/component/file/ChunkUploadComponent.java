@@ -48,8 +48,11 @@ public class ChunkUploadComponent {
             throw new BusinessException(ErrorCode.FILE_UPLOAD_FAIL, "分片序号非法");
         }
         File dir = chunkDir(identifier);
-        if (!dir.exists() && !dir.mkdirs()) {
-            throw new BusinessException(ErrorCode.FILE_UPLOAD_FAIL, "创建分片目录失败");
+        try {
+            // 幂等创建，目录已存在不会报错；并发上传同一 identifier 的分片时也不会因 mkdirs() 返回 false 而失败
+            Files.createDirectories(dir.toPath());
+        } catch (IOException e) {
+            throw new BusinessException(ErrorCode.FILE_UPLOAD_FAIL, "创建分片目录失败：" + e.getMessage());
         }
         File part = new File(dir, chunkNumber + ".part");
         try (OutputStream os = Files.newOutputStream(part.toPath())) {
