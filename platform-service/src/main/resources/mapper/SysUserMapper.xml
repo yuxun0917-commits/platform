@@ -28,7 +28,8 @@
             </if>
             <if test="paramsMap.keyword != null and paramsMap.keyword != ''">
                 AND (u.nickname LIKE CONCAT('%', #{paramsMap.keyword}, '%')
-                         OR u.dept_name LIKE CONCAT('%', #{paramsMap.keyword}, '%'))
+                         OR u.dept_name LIKE CONCAT('%', #{paramsMap.keyword}, '%')
+                         OR u.username LIKE CONCAT('%', #{paramsMap.keyword}, '%'))
             </if>
         ORDER BY u.id DESC
     </select>

@@ -2,4 +2,14 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.platform.service.mapper.SysLoginLogMapper">
 
+    <select id="selectLoginTrend" resultType="com.platform.common.bo.LoginTrendBO">
+        <![CDATA[
+        SELECT DATE(login_time) AS loginDate, COUNT(*) AS count
+        FROM sys_login_log
+        WHERE login_time >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+        GROUP BY DATE(login_time)
+        ORDER BY loginDate
+        ]]>
+    </select>
+
 </mapper>

@@ -38,7 +38,7 @@ import java.util.regex.Pattern;
  *
  * <p>整合控制台日志打印、敏感字段脱敏、操作日志入库三大功能。</p>
  *
- * <p>拦截所有 Controller 方法，对每次请求：</p>
+ * <p>拦截所有 Controller 方法，仅对 POST 请求记录操作日志：</p>
  * <ol>
  *   <li>控制台打印请求入参和响应出参（脱敏后）</li>
  *   <li>采集请求信息（URL、方法、参数、操作人、IP、浏览器等）</li>
@@ -81,7 +81,7 @@ public class LogAspect {
     }
 
     /**
-     * 环绕通知：记录请求与响应日志，并异步写入数据库
+     * 环绕通知：仅对 POST 请求记录请求与响应日志并异步入库；其余方法直接放行
      */
     @Around("pointcut()")
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -90,12 +90,17 @@ public class LogAspect {
             return joinPoint.proceed();
         }
 
-        long startTime = System.currentTimeMillis();
-
-        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         HttpServletRequest request = getRequest();
         String httpMethod = Objects.nonNull(request) ? request.getMethod() : "UNKNOWN";
         String uri = Objects.nonNull(request) ? request.getRequestURI() : "UNKNOWN";
+        // 仅 POST 请求记录操作日志（控制台 + 入库），GET/PUT/DELETE 等直接放行
+        if (!"POST".equalsIgnoreCase(httpMethod)) {
+            return joinPoint.proceed();
+        }
+
+        long startTime = System.currentTimeMillis();
+
+        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
 
         // 1. 控制台打印请求入参（脱敏）
         String consoleArgs = desensitizeArgs(joinPoint.getArgs());

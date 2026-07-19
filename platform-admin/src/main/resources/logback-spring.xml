@@ -76,7 +76,7 @@
     <springProfile name="dev">
         <logger name="com.platform" level="DEBUG"/>
         <!-- 屏蔽操作日志切面写入 sys_log 时产生的 SQL 打印 -->
-        <logger name="com.platform.service.mapper.SysLogMapper" level="INFO"/>
+        <logger name="com.platform.service.mapper" level="INFO"/>
         <root level="INFO">
             <appender-ref ref="CONSOLE"/>
             <appender-ref ref="ALL_FILE"/>
