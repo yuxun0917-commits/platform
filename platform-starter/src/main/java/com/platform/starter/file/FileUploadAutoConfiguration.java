@@ -6,6 +6,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.io.File;
+
 /**
  * 文件上传自动配置类
  *
@@ -41,7 +43,10 @@ public class FileUploadAutoConfiguration implements WebMvcConfigurer {
         if (!urlPrefix.endsWith("/")) {
             urlPrefix = urlPrefix + "/";
         }
-        String location = "file:" + properties.getPath() + "/";
-        registry.addResourceHandler(urlPrefix + "**").addResourceLocations(location);
+        // 本地存储根目录绝对化，避免依赖应用启动时的相对工作目录（如 ./uploads）
+        String absPath = new File(properties.getPath()).getAbsolutePath();
+        registry.addResourceHandler(urlPrefix + "**")
+                .addResourceLocations("file:" + absPath + "/")
+                .setCachePeriod(3600);
     }
 }

@@ -51,7 +51,7 @@ public class UserInfoBO implements Serializable {
         private Long id;
         private String username;
         private String nickname;
-        private String avatar;
+        private Long avatarId;
         private Integer gender;
         private LocalDate birthday;
         private String email;

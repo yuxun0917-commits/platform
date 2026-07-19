@@ -53,10 +53,10 @@ public class SysUser implements Serializable {
     private String nickname;
 
     /**
-     * 头像URL
+     * 头像附件ID（关联 sys_attachment.id，0=未设置）
      */
-    @TableField("avatar")
-    private String avatar;
+    @TableField("avatar_id")
+    private Long avatarId;
 
     /**
      * 性别（0未知 1男 2女）

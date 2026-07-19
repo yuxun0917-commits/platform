@@ -36,9 +36,10 @@ public class UserSaveVO implements Serializable {
     @NotBlank(message = "昵称不能为空")
     private String nickname;
 
-    /** 头像URL */
-    @Schema(description = "头像URL", example = "/avatar/zhangsan.png")
-    private String avatar;
+    /** 头像附件ID（关联 sys_attachment.id，0=未设置） */
+    @Schema(description = "头像附件ID（关联 sys_attachment.id，0=未设置）", example = "0")
+    @NotNull(message = "请上传头像")
+    private Long avatarId;
 
     /** 性别（0未知 1男 2女） */
     @Schema(description = "性别（0未知 1男 2女）", example = "1")

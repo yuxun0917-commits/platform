@@ -5,6 +5,7 @@ import com.platform.admin.vo.dict.DictItemEditVO;
 import com.platform.admin.vo.dict.DictItemSaveVO;
 import com.platform.admin.vo.dict.DictItemVO;
 import com.platform.common.annotation.JsonCoverParam;
+import com.platform.common.context.SecurityUser;
 import com.platform.common.entity.admin.SysDict;
 import com.platform.common.entity.admin.SysDictItem;
 import com.platform.common.enums.DeleteStatusEnum;
@@ -23,17 +24,10 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import ma.glasnost.orika.MapperFacade;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.time.LocalDateTime;
+import java.util.*;
 
 /**
  * 字典项管理控制器
@@ -149,6 +143,10 @@ public class SysDictItemController {
         Assert.notNull(SysDictStatusEnum.getByCode(saveVO.getStatus()), "状态值不合法（0禁用 1正常）");
         // 4. 保存
         SysDictItem item = mapperFacade.map(saveVO, SysDictItem.class);
+        item.setCreateBy(SecurityUser.getUserId())
+                .setCreateTime(LocalDateTime.now())
+                .setUpdateBy(SecurityUser.getUserId())
+                .setUpdateTime(LocalDateTime.now());
         sysDictItemService.save(item);
         // 5. 清除缓存
         dictComponent.cleanDictCache(saveVO.getDictType());
@@ -175,10 +173,10 @@ public class SysDictItemController {
         // 4. 校验状态合法性
         Assert.notNull(SysDictStatusEnum.getByCode(editVO.getStatus()), "状态值不合法（0禁用 1正常）");
         // 5. 更新
-        SysDictItem update = mapperFacade.map(editVO, SysDictItem.class);
-        sysDictItemService.lambdaUpdate()
-                .eq(SysDictItem::getId, editVO.getId())
-                .update(update);
+        SysDictItem updateItem = mapperFacade.map(editVO, SysDictItem.class);
+        updateItem.setUpdateBy(SecurityUser.getUserId())
+                .setUpdateTime(LocalDateTime.now());
+        sysDictItemService.updateById(updateItem);
         // 6. 清除缓存（旧编码和新编码）
         dictComponent.cleanDictCache(item.getDictType());
         if (!Objects.equals(item.getDictType(), editVO.getDictType())) {
@@ -201,8 +199,10 @@ public class SysDictItemController {
         SysDictItem item = sysDictItemService.findById(id);
         // 2. 逻辑删除
         sysDictItemService.lambdaUpdate()
-                .set(SysDictItem::getIsDelete, DeleteStatusEnum.DELETED.getCode())
                 .eq(SysDictItem::getId, id)
+                .set(SysDictItem::getIsDelete, DeleteStatusEnum.DELETED.getCode())
+                .set(SysDictItem::getUpdateBy, SecurityUser.getUserId())
+                .set(SysDictItem::getUpdateTime, LocalDateTime.now())
                 .update();
         // 3. 清除缓存
         dictComponent.cleanDictCache(item.getDictType());

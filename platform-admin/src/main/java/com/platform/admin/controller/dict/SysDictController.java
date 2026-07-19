@@ -2,12 +2,9 @@ package com.platform.admin.controller.dict;
 
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.platform.admin.vo.dict.DictEditVO;
-import com.platform.admin.vo.dict.DictItemVO;
-import com.platform.admin.vo.dict.DictSaveVO;
-import com.platform.admin.vo.dict.DictSelectVO;
-import com.platform.admin.vo.dict.DictVO;
+import com.platform.admin.vo.dict.*;
 import com.platform.common.annotation.JsonCoverParam;
+import com.platform.common.context.SecurityUser;
 import com.platform.common.entity.admin.SysDict;
 import com.platform.common.entity.admin.SysDictItem;
 import com.platform.common.enums.DeleteStatusEnum;
@@ -27,17 +24,10 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import ma.glasnost.orika.MapperFacade;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.time.LocalDateTime;
+import java.util.*;
 
 /**
  * 字典类型管理控制器
@@ -204,6 +194,10 @@ public class SysDictController {
         Assert.notNull(SysDictStatusEnum.getByCode(saveVO.getStatus()), "状态值不合法（0禁用 1正常）");
         // 3. 保存
         SysDict dict = mapperFacade.map(saveVO, SysDict.class);
+        dict.setCreateBy(SecurityUser.getUserId())
+                .setCreateTime(LocalDateTime.now())
+                .setUpdateBy(SecurityUser.getUserId())
+                .setUpdateTime(LocalDateTime.now());
         sysDictService.save(dict);
         return Result.success();
     }
@@ -229,10 +223,10 @@ public class SysDictController {
         // 3. 校验状态合法性
         Assert.notNull(SysDictStatusEnum.getByCode(editVO.getStatus()), "状态值不合法（0禁用 1正常）");
         // 4. 更新
-        SysDict update = mapperFacade.map(editVO, SysDict.class);
-        sysDictService.lambdaUpdate()
-                .eq(SysDict::getId, editVO.getId())
-                .update(update);
+        SysDict updateDict = mapperFacade.map(editVO, SysDict.class);
+        updateDict.setUpdateBy(SecurityUser.getUserId())
+                .setUpdateTime(LocalDateTime.now());
+        sysDictService.updateById(updateDict);
         // 5. 清除缓存（旧编码和新编码都清）
         dictComponent.cleanDictCache(dict.getDictType());
         if (!Objects.equals(dict.getDictType(), editVO.getDictType())) {
@@ -260,8 +254,10 @@ public class SysDictController {
         Assert.isTrue(items.isEmpty(), "该字典类型下存在字典项，无法删除");
         // 3. 逻辑删除
         sysDictService.lambdaUpdate()
-                .set(SysDict::getIsDelete, DeleteStatusEnum.DELETED.getCode())
                 .eq(SysDict::getId, id)
+                .set(SysDict::getIsDelete, DeleteStatusEnum.DELETED.getCode())
+                .set(SysDict::getUpdateBy, SecurityUser.getUserId())
+                .set(SysDict::getUpdateTime, LocalDateTime.now())
                 .update();
         // 4. 清除缓存
         dictComponent.cleanDictCache(dict.getDictType());

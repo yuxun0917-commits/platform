@@ -8,6 +8,7 @@ import com.platform.common.bo.UserInfoBO;
 import com.platform.common.constant.RedisConstant;
 import com.platform.common.context.SecurityUser;
 import com.platform.common.entity.admin.*;
+import com.platform.common.entity.admin.SysAttachment;
 import com.platform.common.enums.*;
 import com.platform.common.exception.BusinessException;
 import com.platform.common.result.Paging;
@@ -16,8 +17,10 @@ import com.platform.common.utils.Assert;
 import com.platform.common.vo.EnumVO;
 import com.platform.component.admin.config.SysConfigComponent;
 import com.platform.component.admin.user.UserComponent;
+import com.platform.component.file.AttachmentUrlComponent;
 import com.platform.service.service.*;
 import com.platform.starter.redis.RedisUtil;
+import com.platform.starter.security.RsaComponent;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -28,6 +31,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -76,6 +80,9 @@ public class SysUserController {
     private final SysDeptService sysDeptService;
     private final SysPostService sysPostService;
     private final RedisUtil redisUtil;
+    private final SysAttachmentService sysAttachmentService;
+    private final AttachmentUrlComponent attachmentUrlComponent;
+    private final RsaComponent rsaComponent;
 
     // ============================ 查询接口 ============================
 
@@ -93,9 +100,18 @@ public class SysUserController {
         Paging<SysUser> paging = new Paging<>(page, pageSize);
         Map<String, Object> paramsMap = paramsMap(status, StrUtil.trim(keyword));
         sysUserService.paging(paging, paramsMap);
+        // 渲染用户头像
+        Set<Long> attIds = paging.getRecords().stream()
+                .map(SysUser::getAvatarId)
+                .collect(Collectors.toSet());
+        Map<Long, SysAttachment> attachmentMap = sysAttachmentService.getMapByIds(attIds);
+
         paging.convert(user -> {
             UserVO map = mapperFacade.map(user, UserVO.class);
             map.setStatusText(UserStatusEnum.getDescByCode(user.getStatus()));
+
+            String avatarPreviewUrl = attachmentUrlComponent.getPreviewUrl(attachmentMap.get(user.getAvatarId()));
+            map.setAvatarPreviewUrl(avatarPreviewUrl);
             return map;
         });
         return Result.success(paging);
@@ -154,8 +170,11 @@ public class SysUserController {
     public Result view(@NotNull(message = "用户id不能为空") @RequestParam Long id) {
         // findById 包含存在性校验，用户不存在时抛出 BusinessException
         SysUser sysUser = sysUserService.findById(id);
+        String avatarPreviewUrl = attachmentUrlComponent.getAccessUrl(sysUser.getAvatarId());
+
         UserVO vo = mapperFacade.map(sysUser, UserVO.class);
         vo.setStatusText(UserStatusEnum.getDescByCode(sysUser.getStatus()));
+        vo.setAvatarPreviewUrl(avatarPreviewUrl);
         if (StrUtil.isNotBlank(sysUser.getPostIds())) {
             vo.setPIds(
                     Arrays.stream(sysUser.getPostIds().split(","))
@@ -212,7 +231,13 @@ public class SysUserController {
         checkUserSaveVO(saveVO);
         SysUser sysUser = mapperFacade.map(saveVO, SysUser.class);
         String initPassword = sysConfigComponent.getConfig(SysConfigKeyEnum.USER_INIT_PASSWORD.getConfigKey());
-        sysUser.setPassword(passwordEncoder.encode(initPassword));
+        sysUser.setPassword(passwordEncoder.encode(initPassword))
+                .setCreateBy(SecurityUser.getUserId())
+                .setCreateTime(LocalDateTime.now())
+                .setUpdateBy(SecurityUser.getUserId())
+                .setUpdateTime(LocalDateTime.now());
+        // 需要更新一下用户的头像附件的关联id
+        SysAttachment attachment = sysAttachmentService.findById(saveVO.getAvatarId());
 
         userComponent.doSomethingInTransactional(() -> {
             sysUserService.save(sysUser);
@@ -226,6 +251,13 @@ public class SysUserController {
                         }).toList();
                 sysUserRoleService.saveBatch(userRoleList);
             }
+            sysAttachmentService.lambdaUpdate()
+                    .eq(SysAttachment::getId, attachment.getId())
+                    .set(SysAttachment::getBizType, AttachmentBizTypeEnum.AVATAR.getCode())
+                    .set(SysAttachment::getBizId, sysUser.getId())
+                    .set(SysAttachment::getUpdateBy, SecurityUser.getUserId())
+                    .set(SysAttachment::getUpdateTime, LocalDateTime.now())
+                    .update();
             return true;
         });
         return Result.success();
@@ -274,12 +306,13 @@ public class SysUserController {
     public Result edit(@Valid @RequestBody UserEditVO editVO) {
         checkUserEditVO(editVO);
         sysUserService.findById(editVO.getId());
+        SysAttachment attachment = sysAttachmentService.findById(editVO.getAvatarId());
 
         SysUser sysUser = mapperFacade.map(editVO, SysUser.class);
+        sysUser.setUpdateBy(SecurityUser.getUserId())
+                .setUpdateTime(LocalDateTime.now());
         userComponent.doSomethingInTransactional(() -> {
-            sysUserService.lambdaUpdate()
-                    .eq(SysUser::getId, editVO.getId())
-                    .update(sysUser);
+            sysUserService.updateById(sysUser);
             // 删除用户原有的角色关联
             sysUserRoleService.lambdaUpdate()
                     .eq(SysUserRole::getUserId, editVO.getId())
@@ -294,6 +327,13 @@ public class SysUserController {
                         }).toList();
                 sysUserRoleService.saveBatch(userRoleList);
             }
+            sysAttachmentService.lambdaUpdate()
+                    .eq(SysAttachment::getId, attachment.getId())
+                    .set(SysAttachment::getBizType, AttachmentBizTypeEnum.AVATAR.getCode())
+                    .set(SysAttachment::getBizId, sysUser.getId())
+                    .set(SysAttachment::getUpdateBy, SecurityUser.getUserId())
+                    .set(SysAttachment::getUpdateTime, LocalDateTime.now())
+                    .update();
             return true;
         });
         // 异步清除用户权限/角色缓存（不踢下线）
@@ -346,8 +386,10 @@ public class SysUserController {
         sysUserService.findById(id);
         // 2. 逻辑删除（同步，保证返回前数据已落库）
         sysUserService.lambdaUpdate()
-                .set(SysUser::getIsDelete, DeleteStatusEnum.DELETED.getCode())
                 .eq(SysUser::getId, id)
+                .set(SysUser::getIsDelete, DeleteStatusEnum.DELETED.getCode())
+                .set(SysUser::getUpdateBy, SecurityUser.getUserId())
+                .set(SysUser::getUpdateTime, LocalDateTime.now())
                 .update();
         // 3. 异步后置清理：踢下线 + 清缓存（删除/禁用用户复用同一逻辑）
         userComponent.cleanUserCacheAndSession(id);
@@ -375,8 +417,10 @@ public class SysUserController {
                 ? UserStatusEnum.DISABLED.getCode()
                 : UserStatusEnum.NORMAL.getCode();
         sysUserService.lambdaUpdate()
-                .set(SysUser::getStatus, targetStatus)
                 .eq(SysUser::getId, id)
+                .set(SysUser::getStatus, targetStatus)
+                .set(SysUser::getUpdateBy, SecurityUser.getUserId())
+                .set(SysUser::getUpdateTime, LocalDateTime.now())
                 .update();
         // 3. 切换为禁用时，异步清理会话与缓存；激活时无需清理
         userComponent.cleanUserCacheAndSession(id);
@@ -402,18 +446,24 @@ public class SysUserController {
         if (!redisUtil.hasKey(RedisConstant.SECOND_AUTH_LOCK + SecurityUser.getUserId())) {
             throw new BusinessException(ErrorCode.SECOND_AUTH);
         }
-        // 1. 校验新密码与确认密码是否一致
-        Assert.isTrue(Objects.equals(passwordVO.getNewPassword(), passwordVO.getConfirmPassword()),
-                "两次输入的密码不一致");
+        // 前端必须用 RSA 公钥加密，此处无条件解密（PKCS1 随机填充，两次密文不同，须在解密后比对）
+        String oldPassword = rsaComponent.decryptByPrivateKey(passwordVO.getOldPassword());
+        String newPassword = rsaComponent.decryptByPrivateKey(passwordVO.getNewPassword());
+        String confirmPassword = rsaComponent.decryptByPrivateKey(passwordVO.getConfirmPassword());
+        // 1. 校验新密码与确认密码是否一致（比对解密后的明文）
+        Assert.isTrue(Objects.equals(newPassword, confirmPassword), "两次输入的密码不一致");
+        // 1.1 校验新密码长度（密文已解密，恢复明文长度约束）
+        Assert.isTrue(newPassword.length() >= 6 && newPassword.length() <= 64, "密码长度必须在6~64个字符之间");
         // 2. 获取当前登录用户（复用 findById，返回的 User 包含 password 字段，无需单独查询）
         SysUser sysUser = sysUserService.findById(passwordVO.getId());
         // 3. 校验旧密码是否正确
-        Assert.isTrue(passwordEncoder.matches(passwordVO.getOldPassword(), sysUser.getPassword()),
-                () -> new BusinessException(ErrorCode.USER_PASSWORD_ERROR));
+        Assert.isTrue(passwordEncoder.matches(oldPassword, sysUser.getPassword()), () -> new BusinessException(ErrorCode.USER_PASSWORD_ERROR));
         // 4. 更新密码（BCrypt加密）
         sysUserService.lambdaUpdate()
-                .set(SysUser::getPassword, passwordEncoder.encode(passwordVO.getNewPassword()))
                 .eq(SysUser::getId, passwordVO.getId())
+                .set(SysUser::getPassword, passwordEncoder.encode(newPassword))
+                .set(SysUser::getUpdateBy, SecurityUser.getUserId())
+                .set(SysUser::getUpdateTime, LocalDateTime.now())
                 .update();
         return Result.success();
     }

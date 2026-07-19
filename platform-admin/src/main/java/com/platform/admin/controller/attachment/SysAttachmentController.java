@@ -4,8 +4,10 @@ import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import com.platform.admin.vo.attachment.AttachmentVO;
 import com.platform.common.annotation.JsonCoverParam;
+import com.platform.common.context.SecurityUser;
 import com.platform.common.entity.admin.SysAttachment;
 import com.platform.common.entity.admin.SysStorageConfig;
+import com.platform.common.enums.AttachmentBizTypeEnum;
 import com.platform.common.enums.ErrorCode;
 import com.platform.common.exception.BusinessException;
 import com.platform.common.result.Paging;
@@ -13,6 +15,7 @@ import com.platform.common.result.Result;
 import com.platform.common.utils.Assert;
 import com.platform.service.service.SysAttachmentService;
 import com.platform.service.service.SysStorageConfigService;
+import com.platform.component.file.AttachmentUrlComponent;
 import com.platform.starter.file.FileStorage;
 import com.platform.starter.file.FileStorageManager;
 import com.platform.starter.file.FileUploadResult;
@@ -33,6 +36,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URLEncoder;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -65,22 +69,23 @@ public class SysAttachmentController {
     private final SysStorageConfigService storageConfigService;
     private final SysAttachmentService attachmentService;
     private final MapperFacade mapperFacade;
+    private final AttachmentUrlComponent attachmentUrlComponent;
 
     /**
      * 文件上传
      *
      * @param file     上传文件
      * @param configId 指定存储配置ID（为空则走默认存储）
-     * @param bizType  业务类型（如 avatar/article）
-     * @param bizId    业务ID
+     * @param bizType  业务类型 code（见 AttachmentBizTypeEnum：1头像 2文章图片 3文档 4导入模板 5其他）
+     * @param bizId    业务ID（如用户ID）
      * @return 附件信息
      */
     @Operation(summary = "文件上传")
     @PostMapping("/upload")
     public Result upload(@NotNull(message = "上传文件不能为空") @RequestParam("file") MultipartFile file,
                          Long configId,
-                         String bizType,
-                         String bizId) {
+                         Integer bizType,
+                         Long bizId) {
         Assert.isTrue(!file.isEmpty(), "上传文件不能为空");
         SysStorageConfig config = (configId != null)
                 ? storageConfigService.findById(configId)
@@ -92,15 +97,20 @@ public class SysAttachmentController {
         attach.setConfigId(config.getId());
         attach.setFileName(Objects.toString(file.getOriginalFilename(), "unknown"));
         attach.setFileKey(result.getFileKey());
-        attach.setFileUrl(result.getFileUrl());
         attach.setFileExt(parseExt(file.getOriginalFilename()));
         attach.setContentType(file.getContentType());
         attach.setFileSize(file.getSize());
-        attach.setBizType(StrUtil.trimToEmpty(bizType));
-        attach.setBizId(StrUtil.trimToEmpty(bizId));
+        attach.setBizType(bizType);
+        attach.setBizId(bizId);
+        attach.setCreateBy(SecurityUser.getUserId());
+        attach.setCreateTime(LocalDateTime.now());
+        attach.setUpdateBy(SecurityUser.getUserId());
+        attach.setUpdateTime(LocalDateTime.now());
         attachmentService.save(attach);
 
         AttachmentVO vo = mapperFacade.map(attach, AttachmentVO.class);
+        vo.setBizTypeDesc(AttachmentBizTypeEnum.getDescByCode(attach.getBizType()));
+        fillUrls(attach, vo);
         return Result.success(vo);
     }
 
@@ -109,11 +119,11 @@ public class SysAttachmentController {
      */
     @Operation(summary = "附件列表")
     @GetMapping("/page")
-    public Result page(Integer page, Integer pageSize, Long configId, String bizType, String keyword) {
+    public Result page(Integer page, Integer pageSize, Long configId, Integer bizType, String keyword) {
         Paging<SysAttachment> paging = new Paging<>(page, pageSize);
         Map<String, Object> paramsMap = new HashMap<>(8);
         paramsMap.put("configId", configId);
-        paramsMap.put("bizType", StrUtil.trim(bizType));
+        paramsMap.put("bizType", bizType);
         paramsMap.put("keyword", StrUtil.trim(keyword));
         attachmentService.paging(paging, paramsMap);
         // 取本页所有 configId 的 set，批量查部分字段（id + configName），避免逐条查/N+1
@@ -124,6 +134,8 @@ public class SysAttachmentController {
         paging.convert(att -> {
             AttachmentVO vo = mapperFacade.map(att, AttachmentVO.class);
             vo.setConfigName(configNameMap.get(att.getConfigId()));
+            vo.setBizTypeDesc(AttachmentBizTypeEnum.getDescByCode(att.getBizType()));
+            fillUrls(att, vo);
             return vo;
         });
         return Result.success(paging);
@@ -137,6 +149,8 @@ public class SysAttachmentController {
     public Result view(@NotNull(message = "附件ID不能为空") Long id) {
         SysAttachment att = attachmentService.findById(id);
         AttachmentVO vo = mapperFacade.map(att, AttachmentVO.class);
+        vo.setBizTypeDesc(AttachmentBizTypeEnum.getDescByCode(att.getBizType()));
+        fillUrls(att, vo);
         return Result.success(vo);
     }
 
@@ -198,6 +212,17 @@ public class SysAttachmentController {
     }
 
     /**
+     * 填充访问地址与预览链接（均不依赖已废弃的 file_url 字段，由存储配置实时拼出）：
+     * fileUrl 对所有附件返回（通用访问/下载地址），previewUrl 仅图片返回（可内联渲染）。
+     */
+    private void fillUrls(SysAttachment att, AttachmentVO vo) {
+        vo.setFileUrl(attachmentUrlComponent.getAccessUrl(att));
+        if (attachmentUrlComponent.isImage(att)) {
+            vo.setPreviewUrl(attachmentUrlComponent.getAccessUrl(att));
+        }
+    }
+
+    /**
      * 删除附件（同步删除物理文件）
      */
     @Operation(summary = "删除附件")
@@ -205,6 +230,7 @@ public class SysAttachmentController {
     @JsonCoverParam
     public Result delete(@NotNull(message = "附件ID不能为空") Long id) {
         SysAttachment att = attachmentService.findById(id);
+        Assert.isTrue(att.getBizId() == 0, "附件已关联，无法删除");
         SysStorageConfig config = storageConfigService.findById(att.getConfigId());
         FileStorage storage = fileStorageManager.getStorage(config);
         try {

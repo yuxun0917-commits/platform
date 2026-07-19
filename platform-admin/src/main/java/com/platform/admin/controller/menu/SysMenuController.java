@@ -183,6 +183,10 @@ public class SysMenuController {
         Assert.notNull(MenuTypeEnum.getByCode(saveVO.getMenuType()), "菜单类型值不合法（1目录 2菜单 3按钮）");
         // 3. 保存
         SysMenu sysMenu = mapperFacade.map(saveVO, SysMenu.class);
+        sysMenu.setCreateBy(SecurityUser.getUserId())
+                .setCreateTime(LocalDateTime.now())
+                .setUpdateBy(SecurityUser.getUserId())
+                .setUpdateTime(LocalDateTime.now());
         sysMenuService.save(sysMenu);
         // 4. 清除菜单树缓存
         menuComponent.cleanMenuCache();
@@ -209,9 +213,9 @@ public class SysMenuController {
         }
         // 3. 更新
         SysMenu sysMenu = mapperFacade.map(editVO, SysMenu.class);
-        sysMenuService.lambdaUpdate()
-                .eq(SysMenu::getId, editVO.getId())
-                .update(sysMenu);
+        sysMenu.setUpdateBy(SecurityUser.getUserId())
+                .setUpdateTime(LocalDateTime.now());
+        sysMenuService.updateById(sysMenu);
         // 4. 清除菜单树缓存
         menuComponent.cleanMenuCache();
         menuComponent.cleanMenuTreeCache();
@@ -239,8 +243,10 @@ public class SysMenuController {
                 : MenuStatusEnum.NORMAL.getCode();
         menuComponent.doSomethingInTransactional(() -> {
             sysMenuService.lambdaUpdate()
-                    .set(SysMenu::getStatus, targetStatus)
                     .eq(SysMenu::getId, id)
+                    .set(SysMenu::getStatus, targetStatus)
+                    .set(SysMenu::getUpdateBy, SecurityUser.getUserId())
+                    .set(SysMenu::getUpdateTime, LocalDateTime.now())
                     .update();
             // 如果是顶级菜单，子菜单全部跟随父菜单状态
             if (sysMenu.getParentId() == 0) {
@@ -271,8 +277,10 @@ public class SysMenuController {
         sysMenuService.findById(id);
         // 2. 逻辑删除
         sysMenuService.lambdaUpdate()
-                .set(SysMenu::getIsDelete, DeleteStatusEnum.DELETED.getCode())
                 .eq(SysMenu::getId, id)
+                .set(SysMenu::getIsDelete, DeleteStatusEnum.DELETED.getCode())
+                .set(SysMenu::getUpdateBy, SecurityUser.getUserId())
+                .set(SysMenu::getUpdateTime, LocalDateTime.now())
                 .update();
         // 3. 异步清除菜单关联缓存（用户权限/角色）与菜单树缓存
         menuComponent.cleanMenuCache();

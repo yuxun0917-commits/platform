@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.platform.common.result.Paging;
 
 import java.util.Map;
+import java.util.Set;
 
 /**
  * <p>
@@ -46,4 +47,12 @@ public interface SysAttachmentService extends IService<SysAttachment> {
      * @return 数量
      */
     long countByConfigId(Long configId);
+
+    /**
+     * 根据ID查询（含未删除校验）
+     *
+     * @param ids 附件IDs
+     * @return 附件
+     */
+    Map<Long, SysAttachment> getMapByIds(Set<Long> ids);
 }

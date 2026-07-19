@@ -3,7 +3,6 @@ package com.platform.admin.vo.user;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.io.Serial;
@@ -34,10 +33,9 @@ public class UserPasswordVO implements Serializable {
     @NotBlank(message = "旧密码不能为空")
     private String oldPassword;
 
-    /** 新密码 */
-    @Schema(description = "新密码", example = "new123456", requiredMode = Schema.RequiredMode.REQUIRED)
+    /** 新密码（前端须用 RSA 公钥加密后传入，明文长度约束在后端解密后校验） */
+    @Schema(description = "新密码（RSA加密密文）", example = "new123456", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "新密码不能为空")
-    @Size(min = 6, max = 64, message = "密码长度必须在6~64个字符之间")
     private String newPassword;
 
     /** 确认新密码 */

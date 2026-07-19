@@ -5,6 +5,7 @@ import com.platform.admin.vo.storage.StorageConfigEditVO;
 import com.platform.admin.vo.storage.StorageConfigSaveVO;
 import com.platform.admin.vo.storage.StorageConfigVO;
 import com.platform.common.annotation.JsonCoverParam;
+import com.platform.common.context.SecurityUser;
 import com.platform.common.entity.admin.SysStorageConfig;
 import com.platform.common.enums.DeleteStatusEnum;
 import com.platform.common.enums.StorageConfigStatusEnum;
@@ -22,12 +23,9 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import ma.glasnost.orika.MapperFacade;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -150,6 +148,10 @@ public class SysStorageConfigController {
         Assert.notNull(StorageTypeEnum.getByCode(saveVO.getStorageType()), "存储类型不合法");
         Assert.notNull(StorageConfigStatusEnum.getByCode(saveVO.getStatus()), "状态值不合法");
         SysStorageConfig config = mapperFacade.map(saveVO, SysStorageConfig.class);
+        config.setCreateBy(SecurityUser.getUserId())
+                .setCreateTime(LocalDateTime.now())
+                .setUpdateBy(SecurityUser.getUserId())
+                .setUpdateTime(LocalDateTime.now());
         storageConfigService.save(config);
         return Result.success();
     }
@@ -163,10 +165,10 @@ public class SysStorageConfigController {
         storageConfigService.findById(editVO.getId());
         Assert.notNull(StorageTypeEnum.getByCode(editVO.getStorageType()), "存储类型不合法");
         Assert.notNull(StorageConfigStatusEnum.getByCode(editVO.getStatus()), "状态值不合法");
-        SysStorageConfig update = mapperFacade.map(editVO, SysStorageConfig.class);
-        storageConfigService.lambdaUpdate()
-                .eq(SysStorageConfig::getId, editVO.getId())
-                .update(update);
+        SysStorageConfig updateConfig = mapperFacade.map(editVO, SysStorageConfig.class);
+        updateConfig.setUpdateBy(SecurityUser.getUserId())
+                .setUpdateTime(LocalDateTime.now());
+        storageConfigService.updateById(updateConfig);
         return Result.success();
     }
 
@@ -182,8 +184,10 @@ public class SysStorageConfigController {
         long count = attachmentService.countByConfigId(id);
         Assert.isTrue(count == 0, "该存储配置下仍有{}个附件，无法删除", count);
         storageConfigService.lambdaUpdate()
-                .set(SysStorageConfig::getIsDelete, DeleteStatusEnum.DELETED.getCode())
                 .eq(SysStorageConfig::getId, id)
+                .set(SysStorageConfig::getIsDelete, DeleteStatusEnum.DELETED.getCode())
+                .set(SysStorageConfig::getUpdateBy, SecurityUser.getUserId())
+                .set(SysStorageConfig::getUpdateTime, LocalDateTime.now())
                 .update();
         return Result.success();
     }
@@ -208,8 +212,10 @@ public class SysStorageConfigController {
         storageConfigService.findById(id);
         Assert.notNull(StorageConfigStatusEnum.getByCode(status), "状态值不合法");
         storageConfigService.lambdaUpdate()
-                .set(SysStorageConfig::getStatus, status)
                 .eq(SysStorageConfig::getId, id)
+                .set(SysStorageConfig::getStatus, status)
+                .set(SysStorageConfig::getUpdateBy, SecurityUser.getUserId())
+                .set(SysStorageConfig::getUpdateTime, LocalDateTime.now())
                 .update();
         return Result.success();
     }

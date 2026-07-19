@@ -43,6 +43,10 @@ public class AttachmentVO implements Serializable {
     @Schema(description = "文件访问地址")
     private String fileUrl;
 
+    /** 预览链接（仅图片类附件返回，可直接用 <img>/<el-avatar> 渲染；非图片为 null） */
+    @Schema(description = "预览链接(仅图片)")
+    private String previewUrl;
+
     /** 扩展名（不含点） */
     @Schema(description = "扩展名")
     private String fileExt;
@@ -55,13 +59,17 @@ public class AttachmentVO implements Serializable {
     @Schema(description = "文件大小(字节)")
     private Long fileSize;
 
-    /** 业务类型 */
-    @Schema(description = "业务类型")
-    private String bizType;
+    /** 业务类型（code，对应 AttachmentBizTypeEnum） */
+    @Schema(description = "业务类型（1头像 2文章图片 3文档 4导入模板 5其他）")
+    private Integer bizType;
+
+    /** 业务类型描述（由后端根据 bizType 填充，便于前端展示） */
+    @Schema(description = "业务类型描述")
+    private String bizTypeDesc;
 
     /** 业务ID */
     @Schema(description = "业务ID")
-    private String bizId;
+    private Long bizId;
 
     /** 备注 */
     @Schema(description = "备注")

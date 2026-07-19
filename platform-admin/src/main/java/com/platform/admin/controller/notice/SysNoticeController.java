@@ -6,6 +6,7 @@ import com.platform.admin.vo.notice.NoticeSaveVO;
 import com.platform.admin.vo.notice.NoticeSelectVO;
 import com.platform.admin.vo.notice.NoticeVO;
 import com.platform.common.annotation.JsonCoverParam;
+import com.platform.common.context.SecurityUser;
 import com.platform.common.entity.admin.SysNotice;
 import com.platform.common.enums.DeleteStatusEnum;
 import com.platform.common.enums.SysNoticePositionEnum;
@@ -24,6 +25,7 @@ import ma.glasnost.orika.MapperFacade;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -165,6 +167,10 @@ public class SysNoticeController {
         Assert.notNull(SysNoticeStatusEnum.getByCode(saveVO.getStatus()), "状态值不合法（0禁用 1正常）");
         // 4. 保存
         SysNotice notice = mapperFacade.map(saveVO, SysNotice.class);
+        notice.setCreateBy(SecurityUser.getUserId())
+                .setCreateTime(LocalDateTime.now())
+                .setUpdateBy(SecurityUser.getUserId())
+                .setUpdateTime(LocalDateTime.now());
         sysNoticeService.save(notice);
         return Result.success();
     }
@@ -185,10 +191,10 @@ public class SysNoticeController {
         // 4. 校验状态合法性
         Assert.notNull(SysNoticeStatusEnum.getByCode(editVO.getStatus()), "状态值不合法（0禁用 1正常）");
         // 5. 更新
-        SysNotice update = mapperFacade.map(editVO, SysNotice.class);
-        sysNoticeService.lambdaUpdate()
-                .eq(SysNotice::getId, editVO.getId())
-                .update(update);
+        SysNotice updateNotice = mapperFacade.map(editVO, SysNotice.class);
+        updateNotice.setUpdateBy(SecurityUser.getUserId())
+                .setUpdateTime(LocalDateTime.now());
+        sysNoticeService.updateById(updateNotice);
         return Result.success();
     }
 
@@ -206,8 +212,10 @@ public class SysNoticeController {
         sysNoticeService.findById(id);
         // 2. 逻辑删除
         sysNoticeService.lambdaUpdate()
-                .set(SysNotice::getIsDelete, DeleteStatusEnum.DELETED.getCode())
                 .eq(SysNotice::getId, id)
+                .set(SysNotice::getIsDelete, DeleteStatusEnum.DELETED.getCode())
+                .set(SysNotice::getUpdateBy, SecurityUser.getUserId())
+                .set(SysNotice::getUpdateTime, LocalDateTime.now())
                 .update();
         return Result.success();
     }

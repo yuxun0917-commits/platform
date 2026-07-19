@@ -36,9 +36,13 @@ public class UserVO implements Serializable {
     @Schema(description = "用户昵称", example = "超级管理员")
     private String nickname;
 
-    /** 头像URL */
-    @Schema(description = "头像URL", example = "/avatar/admin.png")
-    private String avatar;
+    /** 头像附件ID（关联 sys_attachment.id，0=未设置） */
+    @Schema(description = "头像附件ID（关联 sys_attachment.id，0=未设置）", example = "0")
+    private Long avatarId;
+
+    /** 头像预览地址 */
+    @Schema(description = "头像预览地址")
+    private String avatarPreviewUrl;
 
     /** 性别（0未知 1男 2女） */
     @Schema(description = "性别（0未知 1男 2女）", example = "1")
@@ -94,4 +98,8 @@ public class UserVO implements Serializable {
     /** 创建时间 */
     @Schema(description = "创建时间", example = "2026-06-28T10:00:00")
     private LocalDateTime createTime;
+
+    /** 更新时间 */
+    @Schema(description = "更新时间", example = "2026-06-28T10:00:00")
+    private LocalDateTime updateTime;
 }

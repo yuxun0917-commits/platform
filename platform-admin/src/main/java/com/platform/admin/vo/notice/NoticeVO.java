@@ -54,4 +54,8 @@ public class NoticeVO implements Serializable {
     /** 创建时间 */
     @Schema(description = "创建时间")
     private LocalDateTime createTime;
+
+    /** 更新时间 */
+    @Schema(description = "更新时间", example = "2026-06-28T10:00:00")
+    private LocalDateTime updateTime;
 }

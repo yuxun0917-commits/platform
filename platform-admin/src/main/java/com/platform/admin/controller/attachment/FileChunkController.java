@@ -4,10 +4,12 @@ import cn.hutool.core.util.StrUtil;
 import com.platform.admin.vo.attachment.AttachmentVO;
 import com.platform.common.entity.admin.SysAttachment;
 import com.platform.common.entity.admin.SysStorageConfig;
+import com.platform.common.enums.AttachmentBizTypeEnum;
 import com.platform.common.enums.ErrorCode;
 import com.platform.common.exception.BusinessException;
 import com.platform.common.result.Result;
 import com.platform.common.utils.Assert;
+import com.platform.component.file.AttachmentUrlComponent;
 import com.platform.component.file.ChunkUploadComponent;
 import com.platform.service.service.SysAttachmentService;
 import com.platform.service.service.SysStorageConfigService;
@@ -67,6 +69,7 @@ public class FileChunkController {
     private final ChunkUploadComponent chunkUploadComponent;
     private final FileUploadProperties fileUploadProperties;
     private final MapperFacade mapperFacade;
+    private final AttachmentUrlComponent attachmentUrlComponent;
 
     /**
      * 上传单个分片
@@ -116,8 +119,8 @@ public class FileChunkController {
                         @NotBlank(message = "文件名不能为空") @RequestParam("fileName") String fileName,
                         @Min(value = 1, message = "总分片数必须≥1") @RequestParam("totalChunks") int totalChunks,
                         Long configId,
-                        String bizType,
-                        String bizId,
+                        Integer bizType,
+                        Long bizId,
                         String contentType) {
         // 类型校验（分片上传绕过单文件大小限制，但需校验类型）
         String ext = parseExt(fileName);
@@ -142,15 +145,16 @@ public class FileChunkController {
             attach.setConfigId(config.getId());
             attach.setFileName(fileName);
             attach.setFileKey(result.getFileKey());
-            attach.setFileUrl(result.getFileUrl());
             attach.setFileExt(ext);
             attach.setContentType(StrUtil.blankToDefault(contentType, "application/octet-stream"));
             attach.setFileSize(merged.length());
-            attach.setBizType(StrUtil.trimToEmpty(bizType));
-            attach.setBizId(StrUtil.trimToEmpty(bizId));
+            attach.setBizType(bizType);
+            attach.setBizId(bizId);
             attachmentService.save(attach);
 
             AttachmentVO vo = mapperFacade.map(attach, AttachmentVO.class);
+            vo.setBizTypeDesc(AttachmentBizTypeEnum.getDescByCode(attach.getBizType()));
+            fillUrls(attach, vo);
             return Result.success(vo);
         } finally {
             if (merged.exists() && !merged.delete()) {
@@ -168,5 +172,16 @@ public class FileChunkController {
             return "";
         }
         return filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
+    }
+
+    /**
+     * 填充访问地址与预览链接（fileUrl 对所有附件返回；previewUrl 仅图片返回，可内联渲染）。
+     * 与 SysAttachmentController 一致：URL 不落库，由存储配置实时拼出。
+     */
+    private void fillUrls(SysAttachment att, AttachmentVO vo) {
+        vo.setFileUrl(attachmentUrlComponent.getAccessUrl(att));
+        if (attachmentUrlComponent.isImage(att)) {
+            vo.setPreviewUrl(attachmentUrlComponent.getAccessUrl(att));
+        }
     }
 }

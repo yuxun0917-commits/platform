@@ -4,6 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.platform.admin.vo.dept.*;
 import com.platform.common.annotation.JsonCoverParam;
+import com.platform.common.context.SecurityUser;
 import com.platform.common.entity.admin.SysDept;
 import com.platform.common.entity.admin.SysUser;
 import com.platform.common.enums.DeleteStatusEnum;
@@ -25,10 +26,12 @@ import ma.glasnost.orika.MapperFacade;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 部门管理控制器
@@ -188,6 +191,10 @@ public class SysDeptController {
         Assert.notNull(DeptStatusEnum.getByCode(saveVO.getStatus()), "状态值不合法（0禁用 1正常）");
         // 2. 保存
         SysDept sysDept = mapperFacade.map(saveVO, SysDept.class);
+        sysDept.setCreateBy(SecurityUser.getUserId())
+                .setCreateTime(LocalDateTime.now())
+                .setUpdateBy(SecurityUser.getUserId())
+                .setUpdateTime(LocalDateTime.now());
         sysDeptService.save(sysDept);
         // 3. 清除部门树缓存
         deptComponent.cleanDeptCache();
@@ -213,9 +220,9 @@ public class SysDeptController {
         }
         // 3. 更新
         SysDept sysDept = mapperFacade.map(editVO, SysDept.class);
-        sysDeptService.lambdaUpdate()
-                .eq(SysDept::getId, editVO.getId())
-                .update(sysDept);
+        sysDept.setUpdateBy(SecurityUser.getUserId())
+                .setUpdateTime(LocalDateTime.now());
+        sysDeptService.updateById(sysDept);
         // 4. 清除部门树缓存
         deptComponent.cleanDeptCache();
         return Result.success();
@@ -240,8 +247,10 @@ public class SysDeptController {
                 ? DeptStatusEnum.DISABLED.getCode()
                 : DeptStatusEnum.NORMAL.getCode();
         sysDeptService.lambdaUpdate()
-                .set(SysDept::getStatus, targetStatus)
                 .eq(SysDept::getId, id)
+                .set(SysDept::getStatus, targetStatus)
+                .set(SysDept::getUpdateBy, SecurityUser.getUserId())
+                .set(SysDept::getUpdateTime, LocalDateTime.now())
                 .update();
         // 3. 清除部门树缓存
         deptComponent.cleanDeptCache();
@@ -277,8 +286,10 @@ public class SysDeptController {
         // 4. 逻辑删除
         deptComponent.doSomethingInTransactional(() -> {
             sysDeptService.lambdaUpdate()
-                    .set(SysDept::getIsDelete, DeleteStatusEnum.DELETED.getCode())
                     .eq(SysDept::getId, id)
+                    .set(SysDept::getIsDelete, DeleteStatusEnum.DELETED.getCode())
+                    .set(SysDept::getUpdateBy, SecurityUser.getUserId())
+                    .set(SysDept::getUpdateTime, LocalDateTime.now())
                     .update();
             return true;
         });
@@ -314,15 +325,16 @@ public class SysDeptController {
                 .allMatch(dept -> Objects.equals(dept.getParentId(), parentId));
         Assert.isTrue(allSameLevel, "仅支持同级排序，请勿跨层级排序");
         // 2. 在事务中按顺序赋值 displayOrder
-        deptComponent.doSomethingInTransactional(() -> {
-            for (int i = 0; i < ids.size(); i++) {
-                sysDeptService.lambdaUpdate()
-                        .set(SysDept::getDisplayOrder, i + 1)
-                        .eq(SysDept::getId, ids.get(i))
-                        .update();
-            }
-            return true;
-        });
+        AtomicInteger idx = new AtomicInteger(1);
+        List<SysDept> deptList = ids.stream()
+                .map(id -> {
+                    return new SysDept()
+                            .setId(id)
+                            .setDisplayOrder(idx.getAndIncrement())
+                            .setUpdateBy(SecurityUser.getUserId())
+                            .setUpdateTime(LocalDateTime.now());
+                }).toList();
+        sysDeptService.updateBatchById(deptList);
         // 3. 清除部门树缓存
         deptComponent.cleanDeptCache();
         return Result.success();

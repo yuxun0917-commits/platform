@@ -34,9 +34,10 @@ public class UserEditVO implements Serializable {
     @Schema(description = "用户昵称")
     private String nickname;
 
-    /** 头像URL */
-    @Schema(description = "头像URL")
-    private String avatar;
+    /** 头像附件ID（关联 sys_attachment.id，0=未设置） */
+    @Schema(description = "头像附件ID（关联 sys_attachment.id，0=未设置）")
+    @NotNull(message = "请上传头像")
+    private Long avatarId;
 
     /** 性别（0未知 1男 2女） */
     @Schema(description = "性别（0未知 1男 2女）")

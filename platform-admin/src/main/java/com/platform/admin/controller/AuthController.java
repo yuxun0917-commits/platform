@@ -130,7 +130,7 @@ public class AuthController {
         String password = rsaComponent.decryptByPrivateKey(secondAuthVO.getPassword());
         SysUser sysUser = sysUserService.findById(SecurityUser.getUserId());
         Assert.isTrue(
-                passwordEncoder.matches(secondAuthVO.getPassword(), sysUser.getPassword()),
+                passwordEncoder.matches(password, sysUser.getPassword()),
                  "认证失败，密码错误！"
         );
         redisUtil.set(RedisConstant.SECOND_AUTH_LOCK + SecurityUser.getUserId(), 1, 30, TimeUnit.MINUTES);

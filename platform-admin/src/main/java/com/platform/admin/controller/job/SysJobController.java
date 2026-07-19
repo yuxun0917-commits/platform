@@ -29,6 +29,7 @@ import org.quartz.SchedulerException;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -164,7 +165,10 @@ public class SysJobController {
         if (StrUtil.isBlank(job.getJobGroup())) {
             job.setJobGroup("DEFAULT");
         }
-        job.setCreateBy(SecurityUser.getUserIdAsLongOrNull());
+        job.setCreateBy(SecurityUser.getUserId())
+                .setCreateTime(LocalDateTime.now())
+                .setUpdateBy(SecurityUser.getUserId())
+                .setUpdateTime(LocalDateTime.now());
         sysJobService.save(job);
         // 状态正常则注册到调度器
         if (JobStatusEnum.NORMAL.fromStatus(job.getStatus())) {
@@ -186,11 +190,10 @@ public class SysJobController {
     public Result edit(@Valid @RequestBody SysJobEditVO editVO) {
         SysJob exist = sysJobService.findById(editVO.getId());
         checkParams(editVO.getCronExpression(), editVO.getMisfirePolicy(), editVO.getConcurrent(), editVO.getStatus());
-        SysJob update = mapperFacade.map(editVO, SysJob.class);
-        update.setUpdateBy(SecurityUser.getUserIdAsLongOrNull());
-        sysJobService.lambdaUpdate()
-                .eq(SysJob::getId, editVO.getId())
-                .update(update);
+        SysJob updateJob = mapperFacade.map(editVO, SysJob.class);
+        updateJob.setUpdateBy(SecurityUser.getUserId())
+                .setUpdateTime(LocalDateTime.now());
+        sysJobService.updateById(updateJob);
         // 先移除旧调度，再按新定义重建
         removeJobWithCatch(exist.getId());
         if (JobStatusEnum.NORMAL.fromStatus(editVO.getStatus())) {
@@ -214,8 +217,10 @@ public class SysJobController {
     public Result delete(@NotNull(message = "请选择需要删除的任务") Long id) {
         sysJobService.findById(id);
         sysJobService.lambdaUpdate()
-                .set(SysJob::getIsDelete, DeleteStatusEnum.DELETED.getCode())
                 .eq(SysJob::getId, id)
+                .set(SysJob::getIsDelete, DeleteStatusEnum.DELETED.getCode())
+                .set(SysJob::getUpdateBy, SecurityUser.getUserId())
+                .set(SysJob::getUpdateTime, LocalDateTime.now())
                 .update();
         removeJobWithCatch(id);
         return Result.success();
@@ -238,8 +243,10 @@ public class SysJobController {
                 ? JobStatusEnum.PAUSED.getCode()
                 : JobStatusEnum.NORMAL.getCode();
         sysJobService.lambdaUpdate()
-                .set(SysJob::getStatus, newStatus)
                 .eq(SysJob::getId, id)
+                .set(SysJob::getStatus, newStatus)
+                .set(SysJob::getUpdateBy, SecurityUser.getUserId())
+                .set(SysJob::getUpdateTime, LocalDateTime.now())
                 .update();
         if (JobStatusEnum.NORMAL.fromStatus(newStatus)) {
             // 启用：重新注册调度

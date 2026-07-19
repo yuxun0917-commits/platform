@@ -170,6 +170,10 @@ public class SysPostController {
         Assert.notNull(SysPostStatusEnum.getByCode(saveVO.getStatus()), "状态值不合法（0禁用 1正常）");
         // 3. 保存
         SysPost post = mapperFacade.map(saveVO, SysPost.class);
+        post.setCreateBy(SecurityUser.getUserId())
+                .setCreateTime(LocalDateTime.now())
+                .setUpdateBy(SecurityUser.getUserId())
+                .setUpdateTime(LocalDateTime.now());
         sysPostService.save(post);
         return Result.success();
     }
@@ -195,10 +199,10 @@ public class SysPostController {
         // 3. 校验状态合法性
         Assert.notNull(SysPostStatusEnum.getByCode(editVO.getStatus()), "状态值不合法（0禁用 1正常）");
         // 4. 更新
-        SysPost update = mapperFacade.map(editVO, SysPost.class);
-        sysPostService.lambdaUpdate()
-                .eq(SysPost::getId, editVO.getId())
-                .update(update);
+        SysPost updatePost = mapperFacade.map(editVO, SysPost.class);
+        updatePost.setUpdateBy(SecurityUser.getUserId())
+                .setUpdateTime(LocalDateTime.now());
+        sysPostService.updateById(updatePost);
         return Result.success();
     }
 
@@ -216,8 +220,10 @@ public class SysPostController {
         sysPostService.findById(id);
         // 2. 逻辑删除
         sysPostService.lambdaUpdate()
-                .set(SysPost::getIsDelete, DeleteStatusEnum.DELETED.getCode())
                 .eq(SysPost::getId, id)
+                .set(SysPost::getIsDelete, DeleteStatusEnum.DELETED.getCode())
+                .set(SysPost::getUpdateBy, SecurityUser.getUserId())
+                .set(SysPost::getUpdateTime, LocalDateTime.now())
                 .update();
         return Result.success();
     }
@@ -239,18 +245,15 @@ public class SysPostController {
         List<Long> ids = sortVO.getIds();
         int startOrder = sortVO.getStartOrder();
         AtomicInteger idx = new AtomicInteger(startOrder);
-        postComponent.doSomethingInTransactional(() -> {
-            List<SysPost> postList = ids.stream()
-                    .map(id -> {
-                        return new SysPost()
-                                .setId(id)
-                                .setDisplayOrder(idx.getAndIncrement())
-                                .setUpdateBy(SecurityUser.getUserId())
-                                .setUpdateTime(LocalDateTime.now());
-                    }).toList();
-            sysPostService.updateBatchById(postList);
-            return true;
-        });
+        List<SysPost> postList = ids.stream()
+                .map(id -> {
+                    return new SysPost()
+                            .setId(id)
+                            .setDisplayOrder(idx.getAndIncrement())
+                            .setUpdateBy(SecurityUser.getUserId())
+                            .setUpdateTime(LocalDateTime.now());
+                }).toList();
+        sysPostService.updateBatchById(postList);
         return Result.success();
     }
 }

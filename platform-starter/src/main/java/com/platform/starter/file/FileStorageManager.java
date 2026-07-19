@@ -56,4 +56,15 @@ public class FileStorageManager {
         Assert.notNull(factory, "未找到存储类型[{}]的实现", type.getDesc());
         return factory.build(config);
     }
+
+    /**
+     * 根据存储配置与存储键获取访问/预览地址（统一路由到对应存储后端）
+     *
+     * @param config  存储配置
+     * @param fileKey 存储键（本地为相对路径，对象存储为 object key）
+     * @return 访问地址（本地为 /file/... 直链，OSS/COS/MinIO 为各自域名/桶地址）
+     */
+    public String getAccessUrl(SysStorageConfig config, String fileKey) {
+        return getStorage(config).getAccessUrl(fileKey);
+    }
 }

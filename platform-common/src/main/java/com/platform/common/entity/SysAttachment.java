@@ -51,12 +51,6 @@ public class SysAttachment implements Serializable {
     private String fileKey;
 
     /**
-     * 文件访问地址（列表/详情直接返回，免连表重算）
-     */
-    @TableField("file_url")
-    private String fileUrl;
-
-    /**
      * 扩展名（不含点）
      */
     @TableField("file_ext")
@@ -75,16 +69,16 @@ public class SysAttachment implements Serializable {
     private Long fileSize;
 
     /**
-     * 业务类型（如 avatar/article，用于业务关联）
+     * 业务类型（tinyint，对应 AttachmentBizTypeEnum：1头像 2文章图片 3文档 4导入模板 5其他）
      */
     @TableField("biz_type")
-    private String bizType;
+    private Integer bizType;
 
     /**
-     * 业务ID（关联具体业务记录）
+     * 业务ID（关联具体业务记录，如用户ID）
      */
     @TableField("biz_id")
-    private String bizId;
+    private Long bizId;
 
     /**
      * 备注

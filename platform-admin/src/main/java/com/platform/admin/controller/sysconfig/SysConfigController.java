@@ -6,6 +6,7 @@ import com.platform.admin.vo.sysconfig.SysConfigSaveVO;
 import com.platform.admin.vo.sysconfig.SysConfigSelectVO;
 import com.platform.admin.vo.sysconfig.SysConfigVO;
 import com.platform.common.annotation.JsonCoverParam;
+import com.platform.common.context.SecurityUser;
 import com.platform.common.entity.admin.SysConfig;
 import com.platform.common.enums.DeleteStatusEnum;
 import com.platform.common.enums.SysConfigTypeEnum;
@@ -24,11 +25,8 @@ import ma.glasnost.orika.MapperFacade;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.time.LocalDateTime;
+import java.util.*;
 
 /**
  * 系统配置管理控制器
@@ -175,6 +173,10 @@ public class SysConfigController {
         Assert.notNull(SysConfigTypeEnum.getByCode(saveVO.getConfigType()), "配置类型值不合法（0否 1是）");
         // 3. 保存
         SysConfig config = mapperFacade.map(saveVO, SysConfig.class);
+        config.setCreateBy(SecurityUser.getUserId())
+                .setCreateTime(LocalDateTime.now())
+                .setUpdateBy(SecurityUser.getUserId())
+                .setUpdateTime(LocalDateTime.now());
         sysConfigService.save(config);
         // 4. 写入缓存
         sysConfigComponent.setConfig(config.getConfigKey(), config.getConfigValue());
@@ -202,13 +204,13 @@ public class SysConfigController {
         // 3. 校验配置类型合法性
         Assert.notNull(SysConfigTypeEnum.getByCode(editVO.getConfigType()), "配置类型值不合法（0否 1是）");
         // 4. 更新
-        SysConfig update = mapperFacade.map(editVO, SysConfig.class);
-        sysConfigService.lambdaUpdate()
-                .eq(SysConfig::getId, editVO.getId())
-                .update(update);
+        SysConfig updateConfig = mapperFacade.map(editVO, SysConfig.class);
+        updateConfig.setUpdateBy(SecurityUser.getUserId())
+                .setUpdateTime(LocalDateTime.now());
+        sysConfigService.updateById(updateConfig);
         // 5. 清除旧缓存，写入新缓存
         sysConfigComponent.cleanConfigCache(config.getConfigKey());
-        sysConfigComponent.setConfig(editVO.getConfigKey(), editVO.getConfigValue());
+        sysConfigComponent.setConfig(updateConfig.getConfigKey(), updateConfig.getConfigValue());
         return Result.success();
     }
 
@@ -230,8 +232,10 @@ public class SysConfigController {
         Assert.isTrue(SysConfigTypeEnum.NO.fromCode(config.getConfigType()), "系统内置配置不可删除");
         // 3. 逻辑删除
         sysConfigService.lambdaUpdate()
-                .set(SysConfig::getIsDelete, DeleteStatusEnum.DELETED.getCode())
                 .eq(SysConfig::getId, id)
+                .set(SysConfig::getIsDelete, DeleteStatusEnum.DELETED.getCode())
+                .set(SysConfig::getUpdateBy, SecurityUser.getUserId())
+                .set(SysConfig::getUpdateTime, LocalDateTime.now())
                 .update();
         // 4. 清除缓存
         sysConfigComponent.cleanConfigCache(config.getConfigKey());

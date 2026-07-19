@@ -26,12 +26,11 @@ CREATE TABLE `sys_attachment`  (
   `config_id` bigint NOT NULL COMMENT '存储配置ID（关联 sys_storage_config.id，永远指向一条真实配置）',
   `file_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '原始文件名',
   `file_key` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '存储键/相对路径（本地=日期目录+UUID；对象存储=object key）',
-  `file_url` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '文件访问地址（列表/详情直接返回，免连表重算）',
   `file_ext` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '扩展名（不含点）',
   `content_type` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT 'MIME类型',
   `file_size` bigint NOT NULL DEFAULT 0 COMMENT '文件大小（字节）',
-  `biz_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '业务类型（如 avatar/article，用于业务关联）',
-  `biz_id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '业务ID（关联具体业务记录）',
+  `biz_type` tinyint NOT NULL DEFAULT 0 COMMENT '附件业务类型（1头像 2文章图片 3文档附件 4导入模板 5其他，对应 AttachmentBizTypeEnum）',
+  `biz_id` bigint NOT NULL DEFAULT 0 COMMENT '业务ID（关联具体业务记录，如用户ID）',
   `remark` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '备注',
   `is_delete` tinyint NOT NULL DEFAULT 0 COMMENT '逻辑删除（0未删除 1已删除）',
   `create_by` bigint NOT NULL DEFAULT 0 COMMENT '创建人（0=系统）',
@@ -721,7 +720,7 @@ CREATE TABLE `sys_storage_config`  (
 -- ----------------------------
 -- Records of sys_storage_config
 -- ----------------------------
-INSERT INTO `sys_storage_config` VALUES (1, '本地存储', 1, '', '', '', '', '', './uploads', '/file/', 0, 1, 1, '系统默认本地磁盘存储', 0, 0, '2026-07-14 09:34:23', 0, '2026-07-14 09:34:23');
+INSERT INTO `sys_storage_config` VALUES (1, '本地存储', 1, '', '', '', '', '', './uploads', 'http://localhost:8080/file', 0, 1, 1, '系统默认本地磁盘存储', 0, 0, '2026-07-14 09:34:23', 0, '2026-07-14 09:34:23');
 
 -- ----------------------------
 -- Table structure for sys_user
@@ -732,7 +731,7 @@ CREATE TABLE `sys_user`  (
   `username` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '用户名',
   `password` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '密码（加密存储）',
   `nickname` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '' COMMENT '用户昵称',
-  `avatar` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT '' COMMENT '头像URL',
+  `avatar_id` bigint NOT NULL DEFAULT 0 COMMENT '头像附件ID（关联 sys_attachment.id，0=未设置）',
   `gender` tinyint NOT NULL DEFAULT 0 COMMENT '性别（0未知 1男 2女）',
   `birthday` date NULL DEFAULT NULL COMMENT '出生日期',
   `email` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '邮箱',
@@ -762,11 +761,11 @@ CREATE TABLE `sys_user`  (
 -- ----------------------------
 -- Records of sys_user
 -- ----------------------------
-INSERT INTO `sys_user` VALUES (1, 'admin', '$2a$10$25W3AvhX6r1oyFlBpvpS9u79xQEEErhC7f52ga9YfB/psShlnUrXe', '超级管理员', '/avatar/admin.png', 0, '2001-11-02', 'admin@platform.com', '13800000001', 2, '技术研发部', '2,3', '1', '0:0:0:0:0:0:0:1', '2026-07-14 00:09:05', NULL, '系统初始管理员', 1, 0, 0, '2026-06-28 15:48:08', 0, '2026-07-13 16:09:04');
-INSERT INTO `sys_user` VALUES (2, 'zhangsan', '$2a$10$OhuTROTGHrGdAxnO5jZULOe968ioHdPWLoFWAmE1D1vdhfcFqXxVG', '张三', '/avatar/zhangsan.png', 1, '1995-06-15', 'zhangsan@platform.com', '13800000002', 1, '技术研发部', '2', '2', '192.168.1.100', '2026-06-28 09:30:00', NULL, '后端开发工程师', 1, 0, 0, '2026-06-28 15:48:08', 0, '2026-06-28 15:48:08');
-INSERT INTO `sys_user` VALUES (3, 'lisi', '$2a$10$OhuTROTGHrGdAxnO5jZULOe968ioHdPWLoFWAmE1D1vdhfcFqXxVG', '李四', '/avatar/lisi.png', 2, '1998-03-22', 'lisi@platform.com', '13800000003', 2, '产品设计部', '3', '3', '192.168.1.101', '2026-06-27 18:20:00', NULL, '产品经理', 1, 0, 0, '2026-06-28 15:48:08', 0, '2026-07-13 11:49:54');
-INSERT INTO `sys_user` VALUES (4, 'wangwu', '$2a$10$OhuTROTGHrGdAxnO5jZULOe968ioHdPWLoFWAmE1D1vdhfcFqXxVG', '王五', '/avatar/wangwu.png', 1, '1993-11-08', 'wangwu@platform.com', '13800000004', 3, '运营中心', '4', '4', '10.0.0.55', '2026-06-26 14:10:00', NULL, '运营专员', 1, 1, 0, '2026-06-28 15:48:08', 0, '2026-07-11 22:08:07');
-INSERT INTO `sys_user` VALUES (5, 'zhaoliu', '$2a$10$OhuTROTGHrGdAxnO5jZULOe968ioHdPWLoFWAmE1D1vdhfcFqXxVG', '赵六', '/avatar/zhaoliu.png', 0, '2000-07-30', 'zhaoliu@platform.com', '13800000005', 3, '运营中心', '5', '5', '', NULL, NULL, '实习生', 1, 1, 0, '2026-06-28 15:48:08', 0, '2026-07-11 22:08:05');
+INSERT INTO `sys_user` VALUES (1, 'admin', '$2a$10$25W3AvhX6r1oyFlBpvpS9u79xQEEErhC7f52ga9YfB/psShlnUrXe', '超级管理员', 0, 0, '2001-11-02', 'admin@platform.com', '13800000001', 2, '技术研发部', '2,3', '1', '0:0:0:0:0:0:0:1', '2026-07-14 00:09:05', NULL, '系统初始管理员', 1, 0, 0, '2026-06-28 15:48:08', 0, '2026-07-13 16:09:04');
+INSERT INTO `sys_user` VALUES (2, 'zhangsan', '$2a$10$OhuTROTGHrGdAxnO5jZULOe968ioHdPWLoFWAmE1D1vdhfcFqXxVG', '张三', 0, 1, '1995-06-15', 'zhangsan@platform.com', '13800000002', 1, '技术研发部', '2', '2', '192.168.1.100', '2026-06-28 09:30:00', NULL, '后端开发工程师', 1, 0, 0, '2026-06-28 15:48:08', 0, '2026-06-28 15:48:08');
+INSERT INTO `sys_user` VALUES (3, 'lisi', '$2a$10$OhuTROTGHrGdAxnO5jZULOe968ioHdPWLoFWAmE1D1vdhfcFqXxVG', '李四', 0, 2, '1998-03-22', 'lisi@platform.com', '13800000003', 2, '产品设计部', '3', '3', '192.168.1.101', '2026-06-27 18:20:00', NULL, '产品经理', 1, 0, 0, '2026-06-28 15:48:08', 0, '2026-07-13 11:49:54');
+INSERT INTO `sys_user` VALUES (4, 'wangwu', '$2a$10$OhuTROTGHrGdAxnO5jZULOe968ioHdPWLoFWAmE1D1vdhfcFqXxVG', '王五', 0, 1, '1993-11-08', 'wangwu@platform.com', '13800000004', 3, '运营中心', '4', '4', '10.0.0.55', '2026-06-26 14:10:00', NULL, '运营专员', 1, 1, 0, '2026-06-28 15:48:08', 0, '2026-07-11 22:08:07');
+INSERT INTO `sys_user` VALUES (5, 'zhaoliu', '$2a$10$OhuTROTGHrGdAxnO5jZULOe968ioHdPWLoFWAmE1D1vdhfcFqXxVG', '赵六', 0, 0, '2000-07-30', 'zhaoliu@platform.com', '13800000005', 3, '运营中心', '5', '5', '', NULL, NULL, '实习生', 1, 1, 0, '2026-06-28 15:48:08', 0, '2026-07-11 22:08:05');
 
 -- ----------------------------
 -- Table structure for sys_user_role

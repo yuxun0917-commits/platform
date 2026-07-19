@@ -9,6 +9,7 @@ import com.platform.admin.vo.role.RoleSelectVO;
 import com.platform.admin.vo.role.RoleSortVO;
 import com.platform.admin.vo.role.RoleVO;
 import com.platform.common.annotation.JsonCoverParam;
+import com.platform.common.context.SecurityUser;
 import com.platform.common.entity.admin.SysRole;
 import com.platform.common.entity.admin.SysRoleMenu;
 import com.platform.common.enums.DeleteStatusEnum;
@@ -30,7 +31,9 @@ import ma.glasnost.orika.MapperFacade;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -185,6 +188,10 @@ public class SysRoleController {
         checkRoleCodeNotExist(saveVO.getRoleCode());
         // 3. 保存
         SysRole sysRole = mapperFacade.map(saveVO, SysRole.class);
+        sysRole.setCreateBy(SecurityUser.getUserId())
+                .setCreateTime(LocalDateTime.now())
+                .setUpdateBy(SecurityUser.getUserId())
+                .setUpdateTime(LocalDateTime.now());
         sysRoleService.save(sysRole);
         roleComponent.cleanRoleCache();
         return Result.success();
@@ -205,9 +212,9 @@ public class SysRoleController {
         sysRoleService.findById(editVO.getId());
         // 2. 更新
         SysRole sysRole = mapperFacade.map(editVO, SysRole.class);
-        sysRoleService.lambdaUpdate()
-                .eq(SysRole::getId, editVO.getId())
-                .update(sysRole);
+        sysRole.setUpdateBy(SecurityUser.getUserId())
+                .setUpdateTime(LocalDateTime.now());
+        sysRoleService.updateById(sysRole);
         roleComponent.cleanRoleCache();
         return Result.success();
     }
@@ -233,8 +240,10 @@ public class SysRoleController {
                 ? RoleStatusEnum.DISABLED.getCode()
                 : RoleStatusEnum.NORMAL.getCode();
         sysRoleService.lambdaUpdate()
-                .set(SysRole::getStatus, targetStatus)
                 .eq(SysRole::getId, id)
+                .set(SysRole::getStatus, targetStatus)
+                .set(SysRole::getUpdateBy, SecurityUser.getUserId())
+                .set(SysRole::getUpdateTime, LocalDateTime.now())
                 .update();
         roleComponent.cleanRoleCache();
         return Result.success();
@@ -254,8 +263,10 @@ public class SysRoleController {
         sysRoleService.findById(id);
         // 2. 逻辑删除
         sysRoleService.lambdaUpdate()
-                .set(SysRole::getIsDelete, DeleteStatusEnum.DELETED.getCode())
                 .eq(SysRole::getId, id)
+                .set(SysRole::getIsDelete, DeleteStatusEnum.DELETED.getCode())
+                .set(SysRole::getUpdateBy, SecurityUser.getUserId())
+                .set(SysRole::getUpdateTime, LocalDateTime.now())
                 .update();
         roleComponent.cleanRoleCache();
         return Result.success();
@@ -276,16 +287,17 @@ public class SysRoleController {
     @PostMapping("/sort")
     public Result sort(@Valid @RequestBody RoleSortVO sortVO) {
         List<Long> ids = sortVO.getIds();
-        int startOrder = sortVO.getStartOrder();
-        roleComponent.doSomethingInTransactional(() -> {
-            for (int i = 0; i < ids.size(); i++) {
-                sysRoleService.lambdaUpdate()
-                        .set(SysRole::getDisplayOrder, startOrder + i)
-                        .eq(SysRole::getId, ids.get(i))
-                        .update();
-            }
-            return true;
-        });
+        AtomicInteger idx = new AtomicInteger(sortVO.getStartOrder());
+
+        List<SysRole> roleList = ids.stream()
+                .map(id -> {
+                    return new SysRole()
+                            .setId(id)
+                            .setDisplayOrder(idx.incrementAndGet())
+                            .setUpdateBy(SecurityUser.getUserId())
+                            .setUpdateTime(LocalDateTime.now());
+                }).toList();
+        sysRoleService.updateBatchById(roleList);
         return Result.success();
     }
 
