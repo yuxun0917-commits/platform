@@ -37,11 +37,6 @@ public class PostSaveVO implements Serializable {
     @Size(max = 64, message = "岗位名称长度不能超过64个字符")
     private String postName;
 
-    /** 排序（升序） */
-    @Schema(description = "排序（升序）", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotNull(message = "排序不能为空")
-    private Integer displayOrder;
-
     /** 状态（1正常 0禁用） */
     @Schema(description = "状态（1正常 0禁用）", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull(message = "状态不能为空")
