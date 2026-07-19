@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 
 /**
  * 存储配置管理控制器
@@ -66,6 +67,7 @@ public class SysStorageConfigController {
      * 分页查询存储配置
      */
     @Operation(summary = "存储配置列表")
+    @SaCheckPermission("system:storage:list")
     @GetMapping("/page")
     public Result page(Integer page, Integer pageSize, Integer status, String keyword) {
         Paging<SysStorageConfig> paging = new Paging<>(page, pageSize);
@@ -88,6 +90,7 @@ public class SysStorageConfigController {
      * 存储配置选择列表（仅返回 id + 配置名称，启用状态）
      */
     @Operation(summary = "存储配置选择列表")
+    @SaCheckPermission("system:storage:select-list")
     @GetMapping("/select-list")
     public Result selectList(Integer page, Integer pageSize, String keyword) {
         Paging<SysStorageConfig> paging = new Paging<>(page, pageSize);
@@ -100,6 +103,7 @@ public class SysStorageConfigController {
      * 存储配置详情（密钥脱敏）
      */
     @Operation(summary = "存储配置详情")
+    @SaCheckPermission("system:storage:list")
     @GetMapping("/view")
     public Result view(@NotNull(message = "配置ID不能为空") Long id) {
         SysStorageConfig cfg = storageConfigService.findById(id);
@@ -143,6 +147,7 @@ public class SysStorageConfigController {
      * 新增存储配置
      */
     @Operation(summary = "新增存储配置")
+    @SaCheckPermission("system:storage:add")
     @PostMapping("/add")
     public Result add(@Valid @RequestBody StorageConfigSaveVO saveVO) {
         Assert.notNull(StorageTypeEnum.getByCode(saveVO.getStorageType()), "存储类型不合法");
@@ -160,6 +165,7 @@ public class SysStorageConfigController {
      * 编辑存储配置
      */
     @Operation(summary = "编辑存储配置")
+    @SaCheckPermission("system:storage:edit")
     @PostMapping("/edit")
     public Result edit(@Valid @RequestBody StorageConfigEditVO editVO) {
         storageConfigService.findById(editVO.getId());
@@ -176,6 +182,7 @@ public class SysStorageConfigController {
      * 删除存储配置（逻辑删除）
      */
     @Operation(summary = "删除存储配置")
+    @SaCheckPermission("system:storage:delete")
     @PostMapping("/delete")
     @JsonCoverParam
     public Result delete(@NotNull(message = "请选择需要删除的存储配置") Long id) {
@@ -196,6 +203,7 @@ public class SysStorageConfigController {
      * 设为默认存储
      */
     @Operation(summary = "设为默认存储")
+    @SaCheckPermission("system:storage:setDefault")
     @PostMapping("/set-default")
     public Result setDefault(@NotNull(message = "配置ID不能为空") Long id) {
         storageConfigService.setDefault(id);
@@ -206,6 +214,7 @@ public class SysStorageConfigController {
      * 启停存储配置
      */
     @Operation(summary = "启停存储配置")
+    @SaCheckPermission("system:storage:editStatus")
     @PostMapping("/edit-status")
     public Result editStatus(@NotNull(message = "配置ID不能为空") Long id,
                              @NotNull(message = "状态不能为空") Integer status) {

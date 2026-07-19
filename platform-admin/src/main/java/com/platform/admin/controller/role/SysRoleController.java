@@ -35,6 +35,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 
 /**
  * 角色管理控制器
@@ -81,6 +82,7 @@ public class SysRoleController {
      * @return          角色分页列表
      */
     @Operation(summary = "角色列表")
+    @SaCheckPermission("system:role:list")
     @GetMapping("/page")
     public Result page(Integer page, Integer pageSize, Integer status, String keyword) {
         Paging<SysRole> paging = new Paging<>(page, pageSize);
@@ -108,6 +110,7 @@ public class SysRoleController {
      * @return          角色选择列表（分页）
      */
     @Operation(summary = "角色选择列表")
+    @SaCheckPermission("system:role:select-list")
     @GetMapping("/select-list")
     public Result selectList(Integer page, Integer pageSize, String keyword) {
         Paging<SysRole> paging = new Paging<>(page, pageSize);
@@ -123,6 +126,7 @@ public class SysRoleController {
      * @return      角色详细信息
      */
     @Operation(summary = "角色详情")
+    @SaCheckPermission("system:role:list")
     @GetMapping("/view")
     public Result view(@NotNull(message = "角色ID不能为空") Long id) {
         SysRole sysRole = sysRoleService.findById(id);
@@ -138,6 +142,7 @@ public class SysRoleController {
      * @return      角色的菜单
      */
     @Operation(summary = "获取角色的菜单")
+    @SaCheckPermission("system:role:list")
     @GetMapping("/menuIds")
     public Result menuIds(@NotNull(message = "角色id不能为空") Long id) {
         sysRoleService.findById(id);
@@ -180,6 +185,7 @@ public class SysRoleController {
      * @return          操作结果
      */
     @Operation(summary = "添加角色")
+    @SaCheckPermission("system:role:add")
     @PostMapping("/add")
     public Result add(@Valid @RequestBody RoleSaveVO saveVO) {
         // 1. 校验状态合法性
@@ -206,6 +212,7 @@ public class SysRoleController {
      * @return          操作结果
      */
     @Operation(summary = "编辑角色")
+    @SaCheckPermission("system:role:edit")
     @PostMapping("/edit")
     public Result edit(@Valid @RequestBody RoleEditVO editVO) {
         // 1. 校验角色是否存在
@@ -230,6 +237,7 @@ public class SysRoleController {
      * @return      操作结果
      */
     @Operation(summary = "切换角色状态")
+    @SaCheckPermission("system:role:editStatus")
     @PostMapping("/editStatus")
     @JsonCoverParam
     public Result editStatus(@NotNull(message = "请选择需要操作的角色") Long id) {
@@ -256,6 +264,7 @@ public class SysRoleController {
      * @return      操作结果
      */
     @Operation(summary = "删除角色")
+    @SaCheckPermission("system:role:delete")
     @PostMapping("/delete")
     @JsonCoverParam
     public Result delete(@NotNull(message = "请选择需要删除的角色") Long id) {
@@ -284,6 +293,7 @@ public class SysRoleController {
      * @return          操作结果
      */
     @Operation(summary = "批量排序角色")
+    @SaCheckPermission("system:role:sort")
     @PostMapping("/sort")
     public Result sort(@Valid @RequestBody RoleSortVO sortVO) {
         List<Long> ids = sortVO.getIds();
@@ -311,6 +321,7 @@ public class SysRoleController {
      * @return          操作结果
      */
     @Operation(summary = "分配角色菜单")
+    @SaCheckPermission("system:role:assignMenus")
     @PostMapping("/assignMenus")
     public Result assignMenus(@Valid @RequestBody RoleMenuAssignVO assignVO) {
         // 1. 校验角色是否存在

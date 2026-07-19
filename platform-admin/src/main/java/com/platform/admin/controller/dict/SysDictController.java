@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 
 /**
  * 字典类型管理控制器
@@ -73,6 +74,7 @@ public class SysDictController {
      * @return 字典类型分页列表
      */
     @Operation(summary = "字典类型列表")
+    @SaCheckPermission("system:dict:list")
     @GetMapping("/page")
     public Result page(Integer page, Integer pageSize, Integer status, String keyword) {
         Paging<SysDict> paging = new Paging<>(page, pageSize);
@@ -99,6 +101,7 @@ public class SysDictController {
      * @return 字典类型选择列表（分页）
      */
     @Operation(summary = "字典类型选择列表")
+    @SaCheckPermission("system:dict:select-list")
     @GetMapping("/select-list")
     public Result selectList(Integer page, Integer pageSize, String keyword) {
         Paging<SysDict> paging = new Paging<>(page, pageSize);
@@ -114,6 +117,7 @@ public class SysDictController {
      * @return 字典类型详细信息
      */
     @Operation(summary = "字典类型详情")
+    @SaCheckPermission("system:dict:list")
     @GetMapping("/view")
     public Result view(@NotNull(message = "字典ID不能为空") Long id) {
         SysDict dict = sysDictService.findById(id);
@@ -185,6 +189,7 @@ public class SysDictController {
      * @return 操作结果
      */
     @Operation(summary = "添加字典类型")
+    @SaCheckPermission("system:dict:add")
     @PostMapping("/add")
     public Result add(@Valid @RequestBody DictSaveVO saveVO) {
         // 1. 校验字典类型编码唯一性
@@ -211,6 +216,7 @@ public class SysDictController {
      * @return 操作结果
      */
     @Operation(summary = "编辑字典类型")
+    @SaCheckPermission("system:dict:edit")
     @PostMapping("/edit")
     public Result edit(@Valid @RequestBody DictEditVO editVO) {
         // 1. 校验字典类型是否存在
@@ -244,6 +250,7 @@ public class SysDictController {
      * @return 操作结果
      */
     @Operation(summary = "删除字典类型")
+    @SaCheckPermission("system:dict:delete")
     @PostMapping("/delete")
     @JsonCoverParam
     public Result delete(@NotNull(message = "请选择需要删除的字典类型") Long id) {

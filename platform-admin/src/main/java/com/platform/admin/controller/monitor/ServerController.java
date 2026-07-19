@@ -11,6 +11,7 @@ import ma.glasnost.orika.MapperFacade;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 
 /**
  * 服务监控控制器
@@ -40,6 +41,7 @@ public class ServerController {
      * @return 服务监控聚合数据（CPU / 内存 / JVM / 磁盘 / Redis）
      */
     @Operation(summary = "服务监控（CPU/内存/JVM/磁盘/Redis）")
+    @SaCheckPermission("monitor:server:list")
     @GetMapping("/server")
     public Result server() {
         ServerBO bo = serverComponent.getServerInfo();

@@ -34,6 +34,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 
 /**
  * 用户管理控制器
@@ -95,6 +96,7 @@ public class SysUserController {
      * @return          用户分页列表
      */
     @Operation(summary = "用户列表")
+    @SaCheckPermission("system:user:list")
     @GetMapping("/page")
     public Result page(Integer page, Integer pageSize, Integer status, String keyword) {
         Paging<SysUser> paging = new Paging<>(page, pageSize);
@@ -129,6 +131,7 @@ public class SysUserController {
      * @return          用户选择列表（分页）
      */
     @Operation(summary = "用户选择列表")
+    @SaCheckPermission("system:user:select-list")
     @GetMapping("/select-list")
     public Result selectList(Integer page, Integer pageSize, String keyword) {
         Paging<SysUser> paging = new Paging<>(page, pageSize);
@@ -166,6 +169,7 @@ public class SysUserController {
      * @return      用户详细信息
      */
     @Operation(summary = "用户详情")
+    @SaCheckPermission("system:user:list")
     @GetMapping("/view")
     public Result view(@NotNull(message = "用户id不能为空") @RequestParam Long id) {
         // findById 包含存在性校验，用户不存在时抛出 BusinessException
@@ -226,6 +230,7 @@ public class SysUserController {
      * @return          操作结果
      */
     @Operation(summary = "添加用户")
+    @SaCheckPermission("system:user:add")
     @PostMapping("/add")
     public Result add(@Valid @RequestBody UserSaveVO saveVO) {
         checkUserSaveVO(saveVO);
@@ -302,6 +307,7 @@ public class SysUserController {
      * @return          操作结果
      */
     @Operation(summary = "编辑用户基本信息")
+    @SaCheckPermission("system:user:edit")
     @PostMapping("/edit")
     public Result edit(@Valid @RequestBody UserEditVO editVO) {
         checkUserEditVO(editVO);
@@ -379,6 +385,7 @@ public class SysUserController {
      * @return      操作结果
      */
     @Operation(summary = "删除用户")
+    @SaCheckPermission("system:user:delete")
     @PostMapping("/delete")
     @JsonCoverParam
     public Result delete(@NotNull(message = "请选择需要删除的用户") Long id) {
@@ -407,6 +414,7 @@ public class SysUserController {
      * @return      操作结果
      */
     @Operation(summary = "切换用户状态")
+    @SaCheckPermission("system:user:editStatus")
     @PostMapping("/editStatus")
     @JsonCoverParam
     public Result editStatus(@NotNull(message = "请选择需要操作的用户") Long id) {
@@ -440,6 +448,7 @@ public class SysUserController {
      * @return              操作结果
      */
     @Operation(summary = "修改密码")
+    @SaCheckPermission("system:user:changePassword")
     @PostMapping("/changePassword")
     public Result changePassword(@Valid @RequestBody UserPasswordVO passwordVO) {
         // 修改密码需要二次密码认证

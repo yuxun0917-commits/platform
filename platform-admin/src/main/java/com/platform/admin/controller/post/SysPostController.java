@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 
 /**
  * 岗位管理控制器
@@ -81,6 +82,7 @@ public class SysPostController {
      * @return 岗位分页列表
      */
     @Operation(summary = "岗位列表")
+    @SaCheckPermission("system:post:list")
     @GetMapping("/page")
     public Result page(Integer page, Integer pageSize, Integer status, String keyword) {
         Paging<SysPost> paging = new Paging<>(page, pageSize);
@@ -107,6 +109,7 @@ public class SysPostController {
      * @return 岗位选择列表（分页）
      */
     @Operation(summary = "岗位选择列表")
+    @SaCheckPermission("system:post:select-list")
     @GetMapping("/select-list")
     public Result selectList(Integer page, Integer pageSize, String keyword) {
         Paging<SysPost> paging = new Paging<>(page, pageSize);
@@ -122,6 +125,7 @@ public class SysPostController {
      * @return 岗位详细信息
      */
     @Operation(summary = "岗位详情")
+    @SaCheckPermission("system:post:list")
     @GetMapping("/view")
     public Result view(@NotNull(message = "岗位ID不能为空") Long id) {
         SysPost post = sysPostService.findById(id);
@@ -161,6 +165,7 @@ public class SysPostController {
      * @return 操作结果
      */
     @Operation(summary = "添加岗位")
+    @SaCheckPermission("system:post:add")
     @PostMapping("/add")
     public Result add(@Valid @RequestBody PostSaveVO saveVO) {
         // 1. 校验岗位编码唯一性
@@ -187,6 +192,7 @@ public class SysPostController {
      * @return 操作结果
      */
     @Operation(summary = "编辑岗位")
+    @SaCheckPermission("system:post:edit")
     @PostMapping("/edit")
     public Result edit(@Valid @RequestBody PostEditVO editVO) {
         // 1. 校验岗位是否存在
@@ -213,6 +219,7 @@ public class SysPostController {
      * @return 操作结果
      */
     @Operation(summary = "删除岗位")
+    @SaCheckPermission("system:post:delete")
     @PostMapping("/delete")
     @JsonCoverParam
     public Result delete(@NotNull(message = "请选择需要删除的岗位") Long id) {
@@ -240,6 +247,7 @@ public class SysPostController {
      * @return 操作结果
      */
     @Operation(summary = "批量排序岗位")
+    @SaCheckPermission("system:post:sort")
     @PostMapping("/sort")
     public Result sort(@Valid @RequestBody PostSortVO sortVO) {
         List<Long> ids = sortVO.getIds();

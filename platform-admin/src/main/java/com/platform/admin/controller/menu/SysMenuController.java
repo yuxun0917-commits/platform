@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 
 /**
  * 菜单管理控制器
@@ -120,6 +121,7 @@ public class SysMenuController {
      * @return          菜单选择列表（分页）
      */
     @Operation(summary = "菜单选择列表")
+    @SaCheckPermission("system:menu:select-list")
     @GetMapping("/select-list")
     public Result selectList(Integer page, Integer pageSize, String keyword) {
         Paging<SysMenu> paging = new Paging<>(page, pageSize);
@@ -135,6 +137,7 @@ public class SysMenuController {
      * @return      菜单详细信息
      */
     @Operation(summary = "菜单详情")
+    @SaCheckPermission("system:menu:list")
     @GetMapping("/view")
     public Result view(@NotNull(message = "菜单ID不能为空") Long id) {
         SysMenu sysMenu = sysMenuService.findById(id);
@@ -175,6 +178,7 @@ public class SysMenuController {
      * @return          操作结果
      */
     @Operation(summary = "添加菜单")
+    @SaCheckPermission("system:menu:add")
     @PostMapping("/add")
     public Result add(@Valid @RequestBody MenuSaveVO saveVO) {
         // 1. 校验状态合法性
@@ -203,6 +207,7 @@ public class SysMenuController {
      * @return          操作结果
      */
     @Operation(summary = "编辑菜单")
+    @SaCheckPermission("system:menu:edit")
     @PostMapping("/edit")
     public Result edit(@Valid @RequestBody MenuEditVO editVO) {
         // 1. 校验菜单是否存在
@@ -232,6 +237,7 @@ public class SysMenuController {
      * @return      操作结果
      */
     @Operation(summary = "切换菜单状态")
+    @SaCheckPermission("system:menu:editStatus")
     @PostMapping("/editStatus")
     @JsonCoverParam
     public Result editStatus(@NotNull(message = "请选择需要操作的菜单") Long id) {
@@ -270,6 +276,7 @@ public class SysMenuController {
      * @return      操作结果
      */
     @Operation(summary = "删除菜单")
+    @SaCheckPermission("system:menu:delete")
     @PostMapping("/delete")
     @JsonCoverParam
     public Result delete(@NotNull(message = "请选择需要删除的菜单") Long id) {
@@ -302,6 +309,7 @@ public class SysMenuController {
      * @return          操作结果
      */
     @Operation(summary = "菜单排序")
+    @SaCheckPermission("system:menu:sort")
     @PostMapping("/sort")
     public Result sort(@Valid @RequestBody MenuSortVO sortVO) {
         List<Long> ids = sortVO.getIds();

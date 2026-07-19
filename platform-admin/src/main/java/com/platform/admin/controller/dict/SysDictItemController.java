@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 
 /**
  * 字典项管理控制器
@@ -71,6 +72,7 @@ public class SysDictItemController {
      * @return 字典项分页列表
      */
     @Operation(summary = "字典项列表")
+    @SaCheckPermission("system:dict:item:list")
     @GetMapping("/page")
     public Result page(Integer page, Integer pageSize, Long dictId, Integer status, String keyword) {
         Paging<SysDictItem> paging = new Paging<>(page, pageSize);
@@ -94,6 +96,7 @@ public class SysDictItemController {
      * @return 字典项详细信息
      */
     @Operation(summary = "字典项详情")
+    @SaCheckPermission("system:dict:item:list")
     @GetMapping("/view")
     public Result view(@NotNull(message = "字典项ID不能为空") Long id) {
         SysDictItem item = sysDictItemService.findById(id);
@@ -133,6 +136,7 @@ public class SysDictItemController {
      * @return 操作结果
      */
     @Operation(summary = "添加字典项")
+    @SaCheckPermission("system:dict:item:add")
     @PostMapping("/add")
     public Result add(@Valid @RequestBody DictItemSaveVO saveVO) {
         // 1. 校验字典类型存在
@@ -162,6 +166,7 @@ public class SysDictItemController {
      * @return 操作结果
      */
     @Operation(summary = "编辑字典项")
+    @SaCheckPermission("system:dict:item:edit")
     @PostMapping("/edit")
     public Result edit(@Valid @RequestBody DictItemEditVO editVO) {
         // 1. 校验字典项是否存在
@@ -192,6 +197,7 @@ public class SysDictItemController {
      * @return 操作结果
      */
     @Operation(summary = "删除字典项")
+    @SaCheckPermission("system:dict:item:delete")
     @PostMapping("/delete")
     @JsonCoverParam
     public Result delete(@NotNull(message = "请选择需要删除的字典项") Long id) {

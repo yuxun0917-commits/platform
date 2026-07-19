@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 
 /**
  * 系统配置管理控制器
@@ -70,6 +71,7 @@ public class SysConfigController {
      * @return            系统配置分页列表
      */
     @Operation(summary = "配置列表")
+    @SaCheckPermission("system:config:list")
     @GetMapping("/page")
     public Result page(Integer page, Integer pageSize, Integer configType, String keyword) {
         Paging<SysConfig> paging = new Paging<>(page, pageSize);
@@ -96,6 +98,7 @@ public class SysConfigController {
      * @return          配置选择列表（分页）
      */
     @Operation(summary = "配置选择列表")
+    @SaCheckPermission("system:config:select-list")
     @GetMapping("/select-list")
     public Result selectList(Integer page, Integer pageSize, String keyword) {
         Paging<SysConfig> paging = new Paging<>(page, pageSize);
@@ -111,6 +114,7 @@ public class SysConfigController {
      * @return      配置详细信息
      */
     @Operation(summary = "配置详情")
+    @SaCheckPermission("system:config:list")
     @GetMapping("/view")
     public Result view(@NotNull(message = "配置ID不能为空") Long id) {
         SysConfig config = sysConfigService.findById(id);
@@ -164,6 +168,7 @@ public class SysConfigController {
      * @return          操作结果
      */
     @Operation(summary = "添加配置")
+    @SaCheckPermission("system:config:add")
     @PostMapping("/add")
     public Result add(@Valid @RequestBody SysConfigSaveVO saveVO) {
         // 1. 校验配置键名唯一性
@@ -192,6 +197,7 @@ public class SysConfigController {
      * @return          操作结果
      */
     @Operation(summary = "编辑配置")
+    @SaCheckPermission("system:config:edit")
     @PostMapping("/edit")
     public Result edit(@Valid @RequestBody SysConfigEditVO editVO) {
         // 1. 校验配置是否存在
@@ -223,6 +229,7 @@ public class SysConfigController {
      * @return      操作结果
      */
     @Operation(summary = "删除配置")
+    @SaCheckPermission("system:config:delete")
     @PostMapping("/delete")
     @JsonCoverParam
     public Result delete(@NotNull(message = "请选择需要删除的配置") Long id) {

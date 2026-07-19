@@ -23,6 +23,7 @@ public class StpInterfaceImpl implements StpInterface {
 
     private final SysUserService sysUserService;
     private final SysRoleService sysRoleService;
+    private final SysMenuService sysMenuService;
     private final RedisUtil redisUtil;
 
     /**
@@ -34,15 +35,24 @@ public class StpInterfaceImpl implements StpInterface {
         if (!redisUtil.hasKey(key)) {
             Long id = Long.parseLong(String.valueOf(loginId));
             List<SysRole> sysRoles = sysUserService.listRoleById(id);
-            Set<Long> ids = sysRoles.stream()
-                    .map(SysRole::getId)
-                    .collect(Collectors.toSet());
-            List<SysMenu> sysMenus = sysRoleService.listMenuByIds(ids);
-            sysMenus.forEach(menu -> {
-                if (StrUtil.isNotBlank(menu.getPerms())) {
-                    redisUtil.hSet(key, String.valueOf(menu.getId()), menu.getPerms());
-                }
-            });
+            // 超级管理员：直接拥有全部权限码（免逐条授权，避免自锁；注解鉴权随之放行）
+            if (sysRoles.stream().anyMatch(r -> "admin".equals(r.getRoleCode()))) {
+                sysMenuService.list().forEach(menu -> {
+                    if (StrUtil.isNotBlank(menu.getPerms())) {
+                        redisUtil.hSet(key, String.valueOf(menu.getId()), menu.getPerms());
+                    }
+                });
+            } else {
+                Set<Long> ids = sysRoles.stream()
+                        .map(SysRole::getId)
+                        .collect(Collectors.toSet());
+                List<SysMenu> sysMenus = sysRoleService.listMenuByIds(ids);
+                sysMenus.forEach(menu -> {
+                    if (StrUtil.isNotBlank(menu.getPerms())) {
+                        redisUtil.hSet(key, String.valueOf(menu.getId()), menu.getPerms());
+                    }
+                });
+            }
         }
         return listPorRInRedis(key);
     }

@@ -39,6 +39,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 
 /**
  * 附件分片上传控制器
@@ -75,6 +76,7 @@ public class FileChunkController {
      * 上传单个分片
      */
     @Operation(summary = "上传分片")
+    @SaCheckPermission("system:file:upload")
     @PostMapping("/upload")
     public Result uploadChunk(@NotNull(message = "分片文件不能为空") @RequestParam("file") MultipartFile chunk,
                               @NotBlank(message = "文件标识不能为空") @RequestParam("identifier") String identifier,
@@ -98,6 +100,7 @@ public class FileChunkController {
      * 查询已上传分片（断点续传）
      */
     @Operation(summary = "检查已上传分片")
+    @SaCheckPermission("system:file:upload")
     @GetMapping("/check")
     public Result check(@NotBlank(message = "文件标识不能为空") @RequestParam("identifier") String identifier,
                         @Min(value = 1, message = "总分片数必须≥1") @RequestParam("totalChunks") int totalChunks) {
@@ -114,6 +117,7 @@ public class FileChunkController {
      * 合并分片并完成上传（落库 sys_attachment）
      */
     @Operation(summary = "合并分片并上传")
+    @SaCheckPermission("system:file:upload")
     @PostMapping("/merge")
     public Result merge(@NotBlank(message = "文件标识不能为空") @RequestParam("identifier") String identifier,
                         @NotBlank(message = "文件名不能为空") @RequestParam("fileName") String fileName,

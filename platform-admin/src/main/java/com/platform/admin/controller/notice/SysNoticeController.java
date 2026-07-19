@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 
 /**
  * 通知公告管理控制器
@@ -74,6 +75,7 @@ public class SysNoticeController {
      * @return 通知公告分页列表
      */
     @Operation(summary = "通知公告列表")
+    @SaCheckPermission("system:notice:list")
     @GetMapping("/page")
     public Result page(Integer page, Integer pageSize, Integer status, Integer noticeType, Integer position, String keyword) {
         Paging<SysNotice> paging = new Paging<>(page, pageSize);
@@ -102,6 +104,7 @@ public class SysNoticeController {
      * @return 通知公告选择列表（分页）
      */
     @Operation(summary = "通知公告选择列表")
+    @SaCheckPermission("system:notice:select-list")
     @GetMapping("/select-list")
     public Result selectList(Integer page, Integer pageSize, String keyword) {
         Paging<SysNotice> paging = new Paging<>(page, pageSize);
@@ -117,6 +120,7 @@ public class SysNoticeController {
      * @return 通知公告详细信息
      */
     @Operation(summary = "通知公告详情")
+    @SaCheckPermission("system:notice:list")
     @GetMapping("/view")
     public Result view(@NotNull(message = "通知ID不能为空") Long id) {
         SysNotice notice = sysNoticeService.findById(id);
@@ -159,6 +163,7 @@ public class SysNoticeController {
      * @return 操作结果
      */
     @Operation(summary = "添加通知公告")
+    @SaCheckPermission("system:notice:add")
     @PostMapping("/add")
     public Result add(@Valid @RequestBody NoticeSaveVO saveVO) {
         // 2. 校验展示位置合法性
@@ -182,6 +187,7 @@ public class SysNoticeController {
      * @return 操作结果
      */
     @Operation(summary = "编辑通知公告")
+    @SaCheckPermission("system:notice:edit")
     @PostMapping("/edit")
     public Result edit(@Valid @RequestBody NoticeEditVO editVO) {
         // 1. 校验通知公告是否存在
@@ -205,6 +211,7 @@ public class SysNoticeController {
      * @return 操作结果
      */
     @Operation(summary = "删除通知公告")
+    @SaCheckPermission("system:notice:delete")
     @PostMapping("/delete")
     @JsonCoverParam
     public Result delete(@NotNull(message = "请选择需要删除的通知") Long id) {

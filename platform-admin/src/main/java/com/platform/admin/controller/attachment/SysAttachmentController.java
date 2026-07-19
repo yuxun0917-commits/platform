@@ -42,6 +42,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 
 /**
  * 附件管理控制器
@@ -81,6 +82,7 @@ public class SysAttachmentController {
      * @return 附件信息
      */
     @Operation(summary = "文件上传")
+    @SaCheckPermission("system:file:upload")
     @PostMapping("/upload")
     public Result upload(@NotNull(message = "上传文件不能为空") @RequestParam("file") MultipartFile file,
                          Long configId,
@@ -118,6 +120,7 @@ public class SysAttachmentController {
      * 附件分页列表
      */
     @Operation(summary = "附件列表")
+    @SaCheckPermission("system:file:list")
     @GetMapping("/page")
     public Result page(Integer page, Integer pageSize, Long configId, Integer bizType, String keyword) {
         Paging<SysAttachment> paging = new Paging<>(page, pageSize);
@@ -145,6 +148,7 @@ public class SysAttachmentController {
      * 附件详情
      */
     @Operation(summary = "附件详情")
+    @SaCheckPermission("system:file:list")
     @GetMapping("/view")
     public Result view(@NotNull(message = "附件ID不能为空") Long id) {
         SysAttachment att = attachmentService.findById(id);
@@ -158,6 +162,7 @@ public class SysAttachmentController {
      * 附件下载（强制下载：Content-Disposition: attachment）
      */
     @Operation(summary = "附件下载")
+    @SaCheckPermission("system:file:download")
     @GetMapping("/download")
     public void download(@NotNull(message = "附件ID不能为空") Long id, HttpServletResponse response) {
         doServe(id, response, true);
@@ -226,6 +231,7 @@ public class SysAttachmentController {
      * 删除附件（同步删除物理文件）
      */
     @Operation(summary = "删除附件")
+    @SaCheckPermission("system:file:delete")
     @PostMapping("/delete")
     @JsonCoverParam
     public Result delete(@NotNull(message = "附件ID不能为空") Long id) {

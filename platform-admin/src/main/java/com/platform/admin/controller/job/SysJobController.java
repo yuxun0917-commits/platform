@@ -34,6 +34,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 
 /**
  * 定时任务管理控制器
@@ -79,6 +80,7 @@ public class SysJobController {
      * @return 任务分页列表
      */
     @Operation(summary = "任务列表")
+    @SaCheckPermission("monitor:job:list")
     @GetMapping("/page")
     public Result page(Integer page, Integer pageSize, Integer status, String keyword) {
         Paging<SysJob> paging = new Paging<>(page, pageSize);
@@ -105,6 +107,7 @@ public class SysJobController {
      * @return 任务选择列表（分页）
      */
     @Operation(summary = "任务选择列表")
+    @SaCheckPermission("monitor:job:select-list")
     @GetMapping("/select-list")
     public Result selectList(Integer page, Integer pageSize, String keyword) {
         Paging<SysJob> paging = new Paging<>(page, pageSize);
@@ -120,6 +123,7 @@ public class SysJobController {
      * @return 任务详细信息
      */
     @Operation(summary = "任务详情")
+    @SaCheckPermission("monitor:job:list")
     @GetMapping("/view")
     public Result view(@NotNull(message = "任务ID不能为空") Long id) {
         SysJob job = sysJobService.findById(id);
@@ -158,6 +162,7 @@ public class SysJobController {
      * @return 操作结果
      */
     @Operation(summary = "添加任务")
+    @SaCheckPermission("monitor:job:add")
     @PostMapping("/add")
     public Result add(@Valid @RequestBody SysJobSaveVO saveVO) {
         checkParams(saveVO.getCronExpression(), saveVO.getMisfirePolicy(), saveVO.getConcurrent(), saveVO.getStatus());
@@ -186,6 +191,7 @@ public class SysJobController {
      * @return 操作结果
      */
     @Operation(summary = "编辑任务")
+    @SaCheckPermission("monitor:job:edit")
     @PostMapping("/edit")
     public Result edit(@Valid @RequestBody SysJobEditVO editVO) {
         SysJob exist = sysJobService.findById(editVO.getId());
@@ -212,6 +218,7 @@ public class SysJobController {
      * @return 操作结果
      */
     @Operation(summary = "删除任务")
+    @SaCheckPermission("monitor:job:delete")
     @PostMapping("/delete")
     @JsonCoverParam
     public Result delete(@NotNull(message = "请选择需要删除的任务") Long id) {
@@ -235,6 +242,7 @@ public class SysJobController {
      * @return 操作结果
      */
     @Operation(summary = "切换任务状态")
+    @SaCheckPermission("monitor:job:changeStatus")
     @PostMapping("/changeStatus")
     @JsonCoverParam
     public Result changeStatus(@NotNull(message = "请选择需要操作的任务") Long id) {
@@ -268,6 +276,7 @@ public class SysJobController {
      * @return 操作结果
      */
     @Operation(summary = "立即执行一次")
+    @SaCheckPermission("monitor:job:run")
     @PostMapping("/run")
     @JsonCoverParam
     public Result run(@NotNull(message = "请选择需要执行的任务") Long id) {

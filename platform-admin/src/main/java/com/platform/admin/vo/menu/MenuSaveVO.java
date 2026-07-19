@@ -43,7 +43,6 @@ public class MenuSaveVO implements Serializable {
 
     /** 路由路径（Vue Router path） */
     @Schema(description = "路由路径", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotBlank(message = "路由路径不能为空")
     @Size(max = 255, message = "路由路径长度不能超过255个字符")
     private String path;
 

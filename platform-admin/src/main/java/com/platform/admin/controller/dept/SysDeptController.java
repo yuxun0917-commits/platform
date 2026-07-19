@@ -32,6 +32,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 
 /**
  * 部门管理控制器
@@ -131,6 +132,7 @@ public class SysDeptController {
      * @return          部门选择列表（分页）
      */
     @Operation(summary = "部门选择列表")
+    @SaCheckPermission("system:dept:select-list")
     @GetMapping("/select-list")
     public Result selectList(Integer page, Integer pageSize, String keyword) {
         Paging<SysDept> paging = new Paging<>(page, pageSize);
@@ -146,6 +148,7 @@ public class SysDeptController {
      * @return      部门详细信息
      */
     @Operation(summary = "部门详情")
+    @SaCheckPermission("system:dept:list")
     @GetMapping("/view")
     public Result view(@NotNull(message = "部门ID不能为空") Long id) {
         SysDept sysDept = sysDeptService.findById(id);
@@ -185,6 +188,7 @@ public class SysDeptController {
      * @return          操作结果
      */
     @Operation(summary = "添加部门")
+    @SaCheckPermission("system:dept:add")
     @PostMapping("/add")
     public Result add(@Valid @RequestBody DeptSaveVO saveVO) {
         // 1. 校验状态合法性
@@ -210,6 +214,7 @@ public class SysDeptController {
      * @return          操作结果
      */
     @Operation(summary = "编辑部门")
+    @SaCheckPermission("system:dept:edit")
     @PostMapping("/edit")
     public Result edit(@Valid @RequestBody DeptEditVO editVO) {
         // 1. 校验部门是否存在
@@ -237,6 +242,7 @@ public class SysDeptController {
      * @return      操作结果
      */
     @Operation(summary = "切换部门状态")
+    @SaCheckPermission("system:dept:editStatus")
     @PostMapping("/editStatus")
     @JsonCoverParam
     public Result editStatus(@NotNull(message = "请选择需要操作的部门") Long id) {
@@ -266,6 +272,7 @@ public class SysDeptController {
      * @return      操作结果
      */
     @Operation(summary = "删除部门")
+    @SaCheckPermission("system:dept:delete")
     @PostMapping("/delete")
     @JsonCoverParam
     public Result delete(@NotNull(message = "请选择需要删除的部门") Long id) {
@@ -312,6 +319,7 @@ public class SysDeptController {
      * @return          操作结果
      */
     @Operation(summary = "部门排序")
+    @SaCheckPermission("system:dept:sort")
     @PostMapping("/sort")
     public Result sort(@Valid @RequestBody DeptSortVO sortVO) {
         List<Long> ids = sortVO.getIds();

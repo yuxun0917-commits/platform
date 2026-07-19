@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 
 /**
  * 登录日志管理控制器
@@ -63,6 +64,7 @@ public class SysLoginLogController {
      * @return           登录日志分页列表
      */
     @Operation(summary = "登录日志列表")
+    @SaCheckPermission("log:loginlog:list")
     @GetMapping("/page")
     public Result page(Integer page, Integer pageSize, Integer loginType, Integer status, String keyword) {
         Paging<SysLoginLog> paging = new Paging<>(page, pageSize);
@@ -87,6 +89,7 @@ public class SysLoginLogController {
      * @return      登录日志详细信息
      */
     @Operation(summary = "登录日志详情")
+    @SaCheckPermission("log:loginlog:list")
     @GetMapping("/view")
     public Result view(@NotNull(message = "日志ID不能为空") Long id) {
         SysLoginLog loginLog = sysLoginLogService.findById(id);
@@ -137,6 +140,7 @@ public class SysLoginLogController {
      * @return      操作结果
      */
     @Operation(summary = "删除登录日志")
+    @SaCheckPermission("log:loginlog:delete")
     @PostMapping("/delete")
     @JsonCoverParam
     public Result delete(@NotNull(message = "请选择需要删除的日志") Long id) {
@@ -155,6 +159,7 @@ public class SysLoginLogController {
      * @return 操作结果
      */
     @Operation(summary = "清空登录日志")
+    @SaCheckPermission("log:loginlog:clean")
     @PostMapping("/clean")
     @JsonCoverParam
     public Result clean() {

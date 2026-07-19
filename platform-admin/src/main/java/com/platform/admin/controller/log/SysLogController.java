@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 
 /**
  * 操作日志管理控制器
@@ -63,6 +64,7 @@ public class SysLogController {
      * @return          操作日志分页列表
      */
     @Operation(summary = "操作日志列表")
+    @SaCheckPermission("log:operlog:list")
     @GetMapping("/page")
     public Result page(Integer page, Integer pageSize, Integer status, String keyword) {
         Paging<SysLog> paging = new Paging<>(page, pageSize);
@@ -85,6 +87,7 @@ public class SysLogController {
      * @return      操作日志详细信息
      */
     @Operation(summary = "操作日志详情")
+    @SaCheckPermission("log:operlog:list")
     @GetMapping("/view")
     public Result view(@NotNull(message = "日志ID不能为空") Long id) {
         SysLog log = sysLogService.findById(id);
@@ -124,6 +127,7 @@ public class SysLogController {
      * @return      操作结果
      */
     @Operation(summary = "删除操作日志")
+    @SaCheckPermission("log:operlog:delete")
     @PostMapping("/delete")
     @JsonCoverParam
     public Result delete(@NotNull(message = "请选择需要删除的日志") Long id) {
@@ -142,6 +146,7 @@ public class SysLogController {
      * @return 操作结果
      */
     @Operation(summary = "清空操作日志")
+    @SaCheckPermission("log:operlog:clean")
     @PostMapping("/clean")
     @JsonCoverParam
     public Result clean() {

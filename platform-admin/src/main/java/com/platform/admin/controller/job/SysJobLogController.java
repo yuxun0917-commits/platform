@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
 import java.util.Map;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 
 /**
  * 定时任务日志控制器
@@ -61,6 +62,7 @@ public class SysJobLogController {
      * @return 任务日志分页列表
      */
     @Operation(summary = "任务日志列表")
+    @SaCheckPermission("monitor:jobLog:list")
     @GetMapping("/page")
     public Result page(@NotNull(message = "任务id不能为空") Long jobId, Integer page, Integer pageSize, Integer status) {
         Paging<SysJobLog> paging = new Paging<>(page, pageSize);
@@ -84,6 +86,7 @@ public class SysJobLogController {
      * @return 日志详细信息
      */
     @Operation(summary = "任务日志详情")
+    @SaCheckPermission("monitor:jobLog:list")
     @GetMapping("/view")
     public Result view(@NotNull(message = "日志ID不能为空") Long id) {
         SysJobLog log = sysJobLogService.findById(id);
@@ -99,6 +102,7 @@ public class SysJobLogController {
      * @return 操作结果
      */
     @Operation(summary = "删除日志")
+    @SaCheckPermission("monitor:jobLog:delete")
     @PostMapping("/delete")
     @JsonCoverParam
     public Result delete(@NotNull(message = "请选择需要删除的日志") Long id) {
@@ -113,6 +117,7 @@ public class SysJobLogController {
      * @return 操作结果
      */
     @Operation(summary = "清空任务日志")
+    @SaCheckPermission("monitor:jobLog:clean")
     @PostMapping("/clean")
     public Result clean(@NotNull(message = "任务id不能为空") Long jobId) {
         Assert.isTrue(sysJobLogService.lambdaUpdate()

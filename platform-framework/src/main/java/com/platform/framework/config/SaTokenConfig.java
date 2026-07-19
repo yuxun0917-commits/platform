@@ -22,7 +22,8 @@ public class SaTokenConfig implements WebMvcConfigurer {
      */
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        // 1. 先注册 sa-token 拦截器(负责登录/权限校验)
+        // 1. 注册 sa-token 拦截器（登录校验 + 注解鉴权）
+        //    注解 @SaCheckPermission / @SaCheckRole 由 SaInterceptor 自动处理，无需手动调用。
         registry.addInterceptor(new SaInterceptor(handler -> StpUtil.checkLogin()))
                 .addPathPatterns("/**")
                 .excludePathPatterns(
@@ -31,10 +32,11 @@ public class SaTokenConfig implements WebMvcConfigurer {
                         "/swagger-ui/**",
                         "/v3/api-docs/**",
                         "/favicon.ico",
-                        // 登录相关接口
-                        "/auth/login",
+                        // 登录/验证码/公钥等免登录接口
+                        "/auth/**",
                         "/captcha/get",
-                        "/**",
+                        // 附件公开预览直链（静态资源映射，免鉴权）
+                        "/file/**",
                         // 静态资源
                         "/static/**",
                         "/webjars/**"
