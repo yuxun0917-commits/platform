@@ -50,3 +50,9 @@
   - **`mybatis-plus.global-config.enable-sql-runner: true` 在 3.5.5 是空开关（no-op）**：该字段仅定义在 `GlobalConfig`，自动配置 `MybatisPlusAutoConfiguration` 从未读取它（源码+字节码双重确认），既不会注册 `SqlRunner` bean，也不影响静态 `SqlRunner.db()`。网上"需配 enable-sql-runner"的说法对应旧版本/旧行为，本项目不适用。
   - 适用：定时任务截断表、一次性脚本式更新等；表名硬编码无注入风险。
   - **替代方案**（若不想用 SqlRunner）：① Mapper 接口加 `@Update("TRUNCATE TABLE xxx") void truncate();`（贴合本项目每模块一 Mapper 规范，支持 `@DS` 多库）；② 注入 Spring `JdbcTemplate` 调 `execute(...)`；③ 直接 `SqlSessionFactory.openSession().update(...)`。
+
+## 接口路由约定（2026-07-21）
+- 所有后端接口统一带 `/api` 前缀：`server.servlet.context-path: /api`，设在 `platform-admin/src/main/resources/application.yml` 主配置，dev/prod 均继承。
+- 端口 `server.port: 8085`（**非 8080**）。`StartupInfoRunner` 已自动拼接 context-path+端口打印访问地址。
+- 加前缀对拦截器/CORS **无影响**：`SaTokenConfig#addPathPatterns("/**")` 与 exclude 列表匹配的是去 context-path 后的 servletPath；`CorsConfig` 的 `UrlBasedCorsConfigurationSource` 注册 `/**` 为 servlet Filter（`HIGHEST_PRECEDENCE`），与路径前缀无关。改前缀**无需动任何 Java 代码**。
+- 副作用：Swagger UI → `/api/swagger-ui.html`、api-docs → `/api/v3/api-docs`、文件直链 `/file/xxx` 实际访问为 `/api/file/xxx`。前端 axios `baseURL` 需设为 `/api`（前端工程不在此仓库，需用户侧改）。
