@@ -1,3 +1,7 @@
+server:
+  servlet:
+    context-path: /api
+
 # ==================== 开发环境配置 ====================
 spring:
   datasource:
