@@ -5,8 +5,6 @@ WORKDIR /app
 # 拷贝本地已构建好的可执行 jar（构建上下文为 platform-admin 目录）
 COPY target/*.jar /app/app.jar
 
-USER app
-
 # 服务端口（与 application.yml server.port 一致）
 EXPOSE 8085
 
