@@ -25,8 +25,8 @@ pipeline {
                 echo "正在拉取分支: ${params.branch}"
                 // TODO: 替换为 platform 项目实际的 Git 地址与凭据
                 git branch: "${params.branch}",
-                    url: 'git@your-git.com:your-org/platform-parent.git',
-                    credentialsId: 'gitee'
+                    url: 'https://github.com/yuxun0917-commits/platform.git',
+                    credentialsId: '6156f9c0-a42c-4b87-a01c-3302e144e7e3'
             }
         }
 
