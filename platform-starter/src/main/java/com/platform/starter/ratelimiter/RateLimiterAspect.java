@@ -34,7 +34,7 @@ public class RateLimiterAspect {
      */
     @Around("@annotation(rateLimit)")
     public Object around(ProceedingJoinPoint joinPoint, RateLimit rateLimit) throws Throwable {
-        String key = buildKey(rateLimit);
+        String key = buildKey(joinPoint, rateLimit);
         long count = redisTemplate.opsForValue().increment(key, 1L);
         if (count == 1L) {
             // 首次访问，设置过期时间
@@ -49,23 +49,19 @@ public class RateLimiterAspect {
 
     /**
      * 构建限流 Redis Key
+     *
+     * <p>使用「目标类名#方法名」作为方法唯一标识，确保不同接口各自独立计数；
+     * 旧实现用调用栈取方法名恒返回 "around"，会导致所有限流接口共用同一计数桶。</p>
      */
-    private String buildKey(RateLimit rateLimit) {
+    private String buildKey(ProceedingJoinPoint joinPoint, RateLimit rateLimit) {
         String prefix = "rate_limit:";
+        String methodKey = joinPoint.getTarget().getClass().getName()
+                + "#" + joinPoint.getSignature().getName();
         if ("GLOBAL".equalsIgnoreCase(rateLimit.type())) {
-            return prefix + "global:" + getCurrentMethod();
+            return prefix + "global:" + methodKey;
         }
         // IP 维度
-        String ip = getClientIp();
-        return prefix + "ip:" + ip + ":" + getCurrentMethod();
-    }
-
-    /**
-     * 获取当前方法标识
-     */
-    private String getCurrentMethod() {
-        // 简化处理：使用时间戳作为方法标识的替代，实际可取签名
-        return Thread.currentThread().getStackTrace()[3].getMethodName();
+        return prefix + "ip:" + getClientIp() + ":" + methodKey;
     }
 
     /**

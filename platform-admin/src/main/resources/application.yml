@@ -36,6 +36,11 @@ sa-token:
   is-read-cookie: false
   token-prefix: Bearer
 
+# ==================== Mybatis-Plus 配置 ====================
+mybatis-plus:
+  global-config:
+    enable-sql-runner: true
+
 # ==================== SpringDoc OpenAPI 配置 ====================
 # 注意：分组配置已移至 SpringDocGroupConfig.java（编程式 GroupedOpenApi Bean），
 # 通过 addOperationCustomizer 显式绑定 customizer，确保 OperationCustomizer 被调用

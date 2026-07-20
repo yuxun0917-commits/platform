@@ -13,9 +13,6 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.security.Principal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -28,6 +25,9 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.Set;
@@ -93,10 +93,6 @@ public class LogAspect {
         HttpServletRequest request = getRequest();
         String httpMethod = Objects.nonNull(request) ? request.getMethod() : "UNKNOWN";
         String uri = Objects.nonNull(request) ? request.getRequestURI() : "UNKNOWN";
-        // 仅 POST 请求记录操作日志（控制台 + 入库），GET/PUT/DELETE 等直接放行
-        if (!"POST".equalsIgnoreCase(httpMethod)) {
-            return joinPoint.proceed();
-        }
 
         long startTime = System.currentTimeMillis();
 

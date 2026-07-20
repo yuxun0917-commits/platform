@@ -1,9 +1,9 @@
 package com.platform.admin.controller;
 
 import com.platform.admin.vo.CaptchaVO;
-import com.platform.common.annotation.IgnoreLog;
 import com.platform.common.result.Result;
 import com.platform.component.captcha.CaptchaComponent;
+import com.platform.starter.ratelimiter.RateLimit;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +33,7 @@ public class CaptchaController {
      *
      * @return 验证码 key 与 Base64 图片
      */
-    @IgnoreLog
+    @RateLimit(limit = 5)
     @Operation(summary = "获取图形验证码")
     @GetMapping("/get")
     public Result get() {

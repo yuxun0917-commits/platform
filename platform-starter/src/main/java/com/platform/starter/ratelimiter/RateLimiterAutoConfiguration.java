@@ -1,6 +1,8 @@
 package com.platform.starter.ratelimiter;
 
+import com.platform.starter.redis.RedisAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -16,6 +18,7 @@ import org.springframework.data.redis.core.RedisTemplate;
  */
 @AutoConfiguration
 @EnableConfigurationProperties(RateLimiterProperties.class)
+@AutoConfigureAfter(RedisAutoConfiguration.class)
 @ConditionalOnProperty(prefix = "platform.rate-limiter", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class RateLimiterAutoConfiguration {
 
