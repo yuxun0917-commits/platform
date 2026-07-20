@@ -53,11 +53,6 @@ spring:
         max-concurrency: 5
         default-requeue-rejected: false
 
-# 生产环境关闭部分 starter 自动配置
-file:
-  upload:
-    path: /data/platform/uploads
-
 platform:
   thread-pool:
     core-pool-size: 10

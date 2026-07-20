@@ -26,6 +26,6 @@ services:
       RABBITMQ_HOST: "${RABBITMQ_HOST:-192.168.244.128}"
       RABBITMQ_PORT: "${RABBITMQ_PORT:-5672}"
     volumes:
-      - /home/yuxun/dockerapp/platform-uploads:/data/platform/uploads
-      - /home/yuxun/dockerapp/platform-logs:/app/logs
+      - /home/yuxun/dockerapp/platform-admin/uploads:/app/uploads
+      - /home/yuxun/dockerapp/platform-admin/logs:/app/logs
     restart: unless-stopped
