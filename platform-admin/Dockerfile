@@ -1,4 +1,4 @@
-FROM eclipse-temurin:17-jre
+FROM docker.1ms.run/library/eclipse-temurin:17-jre
 WORKDIR /app
 
 # 非 root 用户运行，降低容器提权风险
