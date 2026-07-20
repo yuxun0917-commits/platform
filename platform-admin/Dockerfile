@@ -22,9 +22,5 @@ ENV TZ=Asia/Shanghai \
 # 上传目录（prod 为 /data/platform/uploads）与日志目录挂载为卷，便于持久化
 VOLUME ["/data/platform/uploads", "/app/logs"]
 
-# 项目未引入 actuator，使用 TCP 端口探活；接入 actuator 后可改为 HTTP 健康检查
-HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
-    CMD bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080' || exit 1
-
 # exec 形式确保 java 为 PID 1，可正确接收 SIGTERM 触发应用层优雅停机
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]
