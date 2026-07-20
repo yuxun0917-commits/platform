@@ -1,0 +1,6 @@
+# 缩减构建上下文（不影响 COPY target/*.jar）
+.git
+.idea
+.workbuddy
+src
+*.md

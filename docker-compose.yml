@@ -1,0 +1,34 @@
+# platform-admin 部署编排
+# 说明：本项目 MySQL / Redis / RabbitMQ 当前均指向外部主机 192.168.244.128
+# （见 platform-admin/src/main/resources/application-{dev,prod}.yml），
+# 因此这里只编排应用容器，不重复部署中间件。
+# 如需把中间件也容器化，可在此追加 mysql / redis / rabbitmq 服务，
+# 并把 application 配置里的 host 改为对应服务名（mysql / redis / rabbitmq）。
+#
+# 镜像由 Jenkins 流水线阶段4构建：platform-admin:${BUILD_NUMBER}
+# 启动：docker-compose up -d（读取环境变量 APP_NAME / IMAGE_TAG / SPRING_PROFILE）
+
+services:
+  platform-admin:
+    image: "${APP_NAME:-platform-admin}:${IMAGE_TAG:-latest}"
+    container_name: "${APP_NAME:-platform-admin}"
+    ports:
+      - "8080:8080"
+    environment:
+      TZ: Asia/Shanghai
+      SPRING_PROFILES_ACTIVE: "${SPRING_PROFILE:-prod}"
+      # 中间件主机（默认指向外部 192.168.244.128，容器化部署时改为服务名 mysql/redis/rabbitmq）
+      MYSQL_HOST: "${MYSQL_HOST:-192.168.244.128}"
+      MYSQL_PORT: "${MYSQL_PORT:-3306}"
+      REDIS_HOST: "${REDIS_HOST:-192.168.244.128}"
+      REDIS_PORT: "${REDIS_PORT:-6379}"
+      RABBITMQ_HOST: "${RABBITMQ_HOST:-192.168.244.128}"
+      RABBITMQ_PORT: "${RABBITMQ_PORT:-5672}"
+    volumes:
+      - platform-uploads:/data/platform/uploads
+      - platform-logs:/app/logs
+    restart: unless-stopped
+
+volumes:
+  platform-uploads:
+  platform-logs:
