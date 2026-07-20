@@ -14,7 +14,7 @@ services:
     container_name: "${APP_NAME:-platform-admin}"
     network_mode: bridge
     ports:
-      - "8080:8080"
+      - "8085:8085"
     environment:
       TZ: Asia/Shanghai
       SPRING_PROFILES_ACTIVE: "${SPRING_PROFILE:-prod}"
