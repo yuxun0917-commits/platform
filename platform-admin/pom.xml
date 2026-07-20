@@ -52,13 +52,20 @@
     </dependencies>
 
     <build>
+        <!-- 固定产物名为 platform-admin.jar，配合 Dockerfile 精确 COPY，避免版本号/多 jar 干扰 -->
+        <finalName>${project.artifactId}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <!-- 显式指定启动类，确保 repackage 生成正确的 Start-Class -->
+                    <mainClass>com.platform.PlatformApplication</mainClass>
+                </configuration>
                 <executions>
                     <execution>
                         <goals>
+                            <!-- repackage 将普通 jar 重打包为含 Main-Class 的可执行 fat-jar -->
                             <goal>repackage</goal>
                         </goals>
                     </execution>
