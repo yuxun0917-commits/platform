@@ -12,7 +12,7 @@ COPY target/*.jar /app/app.jar
 USER app
 
 # 服务端口（与 application.yml server.port 一致）
-EXPOSE 8080
+EXPOSE 8085
 
 # 时区；默认 prod 环境（dev 含 Druid 控制台 admin/admin，禁止容器启用）；JAVA_OPTS 可 docker run -e 覆盖
 ENV TZ=Asia/Shanghai \
