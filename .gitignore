@@ -17,3 +17,6 @@ chunks/
 # 日志文件
 logs/
 *.log
+
+Jenkinsfile
+docker-compose.yml
