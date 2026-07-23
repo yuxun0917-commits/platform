@@ -61,7 +61,17 @@ public enum SysConfigKeyEnum {
     /**
      * 是否允许自助注册账号
      */
-    ACCOUNT_REGISTER_USER("sys.account.registerUser", "是否开放注册", "是否允许自助注册账号（true/false）"),;
+    ACCOUNT_REGISTER_USER("sys.account.registerUser", "是否开放注册", "是否允许自助注册账号（true/false）"),
+
+    /**
+     * 密码过期时间窗口（天）
+     */
+    PASSWORD_EXPIRE_DAYS("sys.password.expireDays", "密码过期天数", "密码有效期，超过此天数需强制修改（单位：天）"),
+
+    /**
+     * 是否启用新用户强制修改密码
+     */
+    PASSWORD_FORCE_NEW_USER("sys.password.forceNewUser", "新用户强制改密", "新用户首次登录是否强制修改密码（true/false）");
 
     /**
      * 配置键名（如 sys.user.initPassword）

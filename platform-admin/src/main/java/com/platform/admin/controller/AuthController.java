@@ -4,6 +4,7 @@ package com.platform.admin.controller;
 import cn.dev33.satoken.stp.StpUtil;
 import com.platform.admin.vo.LoginVO;
 import com.platform.admin.vo.SecondAuthVO;
+import com.platform.common.constant.CommonConstant;
 import com.platform.common.constant.RedisConstant;
 import com.platform.common.context.SecurityUser;
 import com.platform.common.entity.admin.SysUser;
@@ -67,8 +68,11 @@ public class AuthController {
         SysUser sysUser = sysUserService.login(username, password);
         // 4. Sa-Token 登录，生成令牌
         StpUtil.login(sysUser.getId());
-        StpUtil.getSession().set("username", sysUser.getUsername());
-        StpUtil.getSession().set("nickname", sysUser.getNickname());
+        StpUtil.getSession().set(CommonConstant.SESSION_USERNAME_KEY, sysUser.getUsername());
+        StpUtil.getSession().set(CommonConstant.SESSION_NICKNAME_KEY, sysUser.getNickname());
+        if (Objects.nonNull(sysUser.getPasswordUpdateTime())) {
+            StpUtil.getSession().set(CommonConstant.SESSION_PWD_UPDATE_KEY, sysUser.getPasswordUpdateTime());
+        }
         return Result.success(StpUtil.getTokenValue());
     }
 

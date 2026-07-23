@@ -38,6 +38,8 @@ public enum ErrorCode {
     USER_PASSWORD_ERROR(20003, "密码错误"),
     USER_DISABLED(20004, "用户已被禁用"),
     USER_EMAIL_EXIST(20005, "邮箱已存在"),
+    NEED_CHANGE_PWD(20006, "请先修改密码后再继续操作"),
+
 
     /** 消息模块 30xxx */
     MQ_SEND_FAIL(30001, "消息发送失败"),

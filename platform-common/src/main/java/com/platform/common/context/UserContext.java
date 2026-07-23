@@ -22,7 +22,7 @@ public class UserContext {
 
     private final String nickname;
 
-    public UserContext(Long userId, Long tenantId, String username, String nickname) {
+    public UserContext(Long tenantId, Long userId, String username, String nickname) {
         this.userId = userId;
         this.tenantId = tenantId;
         this.username = username;

@@ -2,7 +2,11 @@ package com.platform.framework.config;
 
 import cn.dev33.satoken.interceptor.SaInterceptor;
 import cn.dev33.satoken.stp.StpUtil;
+import com.platform.framework.interceptor.ForceChangePwdInterceptor;
 import com.platform.framework.interceptor.SaTokenContextInterceptor;
+import com.platform.service.service.SysConfigService;
+import com.platform.starter.redis.RedisUtil;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -14,8 +18,12 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  *
  * @author platform
  */
+@RequiredArgsConstructor
 @Configuration
 public class SaTokenConfig implements WebMvcConfigurer {
+
+    private final RedisUtil redisUtil;
+    private final SysConfigService sysConfigService;
 
     /**
      * 注册 Sa-Token 拦截器
@@ -44,5 +52,13 @@ public class SaTokenConfig implements WebMvcConfigurer {
         // 2. 再注册上下文拦截器(此时登录态已校验完成,可安全读会话)
         registry.addInterceptor(new SaTokenContextInterceptor())
                 .addPathPatterns("/**");
+        // 3. 注册强制修改密码拦截器（登录态已由 SaInterceptor 校验，仅对已登录且非白名单请求生效）
+        registry.addInterceptor(new ForceChangePwdInterceptor(redisUtil, sysConfigService))
+                .addPathPatterns("/**")
+                // 放行自主改密接口：被强制改密的用户需借此"自救"，否则将陷入永远无法解除拦截的死锁
+                .excludePathPatterns(
+                        "/user/reset-pwd",
+                        "/auth/**"
+                );
     }
 }

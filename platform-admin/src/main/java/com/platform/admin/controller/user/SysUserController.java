@@ -1,10 +1,14 @@
 package com.platform.admin.controller.user;
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.dev33.satoken.annotation.SaCheckPermission;
+import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.platform.admin.vo.user.*;
 import com.platform.common.annotation.JsonCoverParam;
 import com.platform.common.bo.UserInfoBO;
+import com.platform.common.constant.CommonConstant;
 import com.platform.common.constant.RedisConstant;
 import com.platform.common.context.SecurityUser;
 import com.platform.common.entity.admin.*;
@@ -34,7 +38,6 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
-import cn.dev33.satoken.annotation.SaCheckPermission;
 
 /**
  * 用户管理控制器
@@ -471,9 +474,54 @@ public class SysUserController {
         sysUserService.lambdaUpdate()
                 .eq(SysUser::getId, passwordVO.getId())
                 .set(SysUser::getPassword, passwordEncoder.encode(newPassword))
+                .set(SysUser::getPasswordUpdateTime, LocalDateTime.now())
                 .set(SysUser::getUpdateBy, SecurityUser.getUserId())
                 .set(SysUser::getUpdateTime, LocalDateTime.now())
                 .update();
+        // 5. 刷新 Sa-Session 中的密码修改时间，使强制改密拦截器立即放行
+        StpUtil.getSession().set(CommonConstant.SESSION_PWD_UPDATE_KEY, LocalDateTime.now());
+        return Result.success();
+    }
+
+    /**
+     * 自主修改密码（免权限，供被强制改密的用户自救）
+     *
+     * <p>仅 {@code @SaCheckLogin}，不要求 {@code system:user:changePassword} 权限，
+     * 也不要求二次认证锁——否则被强制改密的新用户（无权限）将陷入死锁，永远无法解除拦截。</p>
+     *
+     * <p>用户ID强制取自登录态，忽略前端传入，避免越权修改他人密码。
+     * 旧密码校验复用 {@link SysUserService#findById}，新密码 BCrypt 加密存储。</p>
+     *
+     * @param passwordVO    修改密码入参（旧密码、新密码、确认新密码）
+     * @return              操作结果
+     */
+    @Operation(summary = "自主修改密码（强制改密自救）")
+    @SaCheckLogin
+    @PostMapping("/reset-pwd")
+    public Result resetPwd(@Valid @RequestBody UserPasswordVO passwordVO) {
+        // 前端必须用 RSA 公钥加密，此处无条件解密（PKCS1 随机填充，须在解密后比对）
+        String oldPassword = rsaComponent.decryptByPrivateKey(passwordVO.getOldPassword());
+        String newPassword = rsaComponent.decryptByPrivateKey(passwordVO.getNewPassword());
+        String confirmPassword = rsaComponent.decryptByPrivateKey(passwordVO.getConfirmPassword());
+        // 1. 校验新密码与确认密码是否一致
+        Assert.isTrue(Objects.equals(newPassword, confirmPassword), "两次输入的密码不一致");
+        // 2. 校验新密码长度
+        Assert.isTrue(newPassword.length() >= 6 && newPassword.length() <= 64, "密码长度必须在6~64个字符之间");
+        // 3. 用户ID强制取自登录态，忽略入参
+        Long userId = SecurityUser.getUserId();
+        // 4. 获取当前登录用户并校验旧密码
+        SysUser sysUser = sysUserService.findById(userId);
+        Assert.isTrue(passwordEncoder.matches(oldPassword, sysUser.getPassword()), () -> new BusinessException(ErrorCode.USER_PASSWORD_ERROR));
+        // 5. 更新密码（BCrypt加密）+ 刷新密码修改时间
+        sysUserService.lambdaUpdate()
+                .eq(SysUser::getId, userId)
+                .set(SysUser::getPassword, passwordEncoder.encode(newPassword))
+                .set(SysUser::getPasswordUpdateTime, LocalDateTime.now())
+                .set(SysUser::getUpdateBy, userId)
+                .set(SysUser::getUpdateTime, LocalDateTime.now())
+                .update();
+        // 6. 刷新 Sa-Session 中的密码修改时间，立即解除拦截
+        StpUtil.getSession().set(CommonConstant.SESSION_PWD_UPDATE_KEY, LocalDateTime.now());
         return Result.success();
     }
 

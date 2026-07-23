@@ -29,6 +29,11 @@ public final class RedisConstant {
     public static final String USER_INFO = "sys:user:info:";
 
     /**
+     * 用户密码更新时间
+     */
+    public static final String USER_PWD_UPDATE_TIME = "sys:user:pwd:updateTime:";
+
+    /**
      * 部门树缓存常量
      */
     public static final String DEPT_TREE = "sys:dept:tree";

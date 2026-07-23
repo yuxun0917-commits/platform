@@ -36,4 +36,11 @@ public final class CommonConstant {
 
     /** Token 前缀 */
     public static final String TOKEN_PREFIX = "Bearer ";
+
+    /** 会话中存储租户 id 的 key */
+    public static final String SESSION_TENANT_KEY = "tenantId";
+    public static final String SESSION_USERNAME_KEY = "username";
+    public static final String SESSION_NICKNAME_KEY = "nickname";
+    public static final String SESSION_PWD_UPDATE_KEY = "pwdUpdateTime";
+
 }
